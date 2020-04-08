@@ -1,5 +1,4 @@
 """Retrieve details about a resource at a URL."""
-from functools import wraps
 
 import requests
 from requests import RequestException
@@ -13,27 +12,6 @@ from via.exceptions import (
 )
 
 
-def _handle_errors(inner):
-    """Translate errors into our application errors."""
-
-    @wraps(inner)
-    def deco(*args, **kwargs):
-        try:
-            return inner(*args, **kwargs)
-
-        except REQUESTS_BAD_URL as err:
-            raise BadURL(err.args[0]) from None
-
-        except REQUESTS_UPSTREAM_SERVICE as err:
-            raise UpstreamServiceError(err.args[0]) from None
-
-        except RequestException as err:
-            raise UnhandledException(err.args[0]) from None
-
-    return deco
-
-
-@_handle_errors
 def get_url_details(url):
     """Get the content type and status code for a given URL.
 
@@ -44,6 +22,15 @@ def get_url_details(url):
     :raise UpstreamServiceError: If we server gives us errors
     :raise UnhandledException: For all other request based errors
     """
+    try:
+        with requests.get(url, stream=True, allow_redirects=True) as rsp:
+            return rsp.headers.get("Content-Type"), rsp.status_code
 
-    with requests.get(url, stream=True, allow_redirects=True) as rsp:
-        return rsp.headers.get("Content-Type"), rsp.status_code
+    except REQUESTS_BAD_URL as err:
+        raise BadURL(err.args[0]) from None
+
+    except REQUESTS_UPSTREAM_SERVICE as err:
+        raise UpstreamServiceError(err.args[0]) from None
+
+    except RequestException as err:
+        raise UnhandledException(err.args[0]) from None
