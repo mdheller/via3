@@ -11,6 +11,7 @@ h-pyramid-sentry==1.2.0   # via -r requirements.in
 hupper==1.10.2            # via pyramid
 idna==2.10                # via requests
 jinja2==2.11.2            # via pyramid-jinja2
+lxml==4.5.0               # via -r requirements.in
 markupsafe==1.1.1         # via jinja2, pyramid-jinja2
 newrelic==5.14.1.144      # via -r requirements.in
 pastedeploy==2.1.0        # via plaster-pastedeploy
