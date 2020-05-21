@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta http-equiv="content-language" content="en">
-        <meta name="language" content="English">
+        <meta charset="utf-8"/>
         <style>
 
 body {
@@ -15,32 +14,45 @@ table, td, th {
     padding:4px 8px;
 }
 
+textarea {
+    border:none;
+    margin: -4px;
+    padding: 2px 4px;
+}
+
         </style>
     </head>
     <body>
-        <table>
-            <tr>
-                <th>Domain name</th>
-                <th>Count</th>
-                <th>Original link</th>
-                <th>Via link</th>
-                <th>Via 3 link</th>
-            </tr>
+        <form method="POST" action="/save_comments">
+            <button>Save comments</button>
+            <table>
+                <tr>
+                    <th>Domain name</th>
+                    <th>Count</th>
+                    <th>Original link</th>
+                    <th>Via link</th>
+                    <th>Via 3 link</th>
+                    <th>Comments</th>
+                </tr>
 
-        {% for domain in domains %}
-            <tr>
-                <td>{{ domain.name }}</td>
-                <td>{{ domain.count }}</td>
-                <td><a href="{{ domain.url }}" target="_orig">Original</a></td>
-                <td><a href="{{ legacy_url_for(domain.url) }}" target="_via">Via</a></td>
-                <td>
-                    <a href="{{ url_for(domain.url, "null") }}" target="_via3">Null</a>
-                    <a href="{{ url_for(domain.url, "htmlparser") }}" target="_via3">HTMLParser</a>
-                    <a href="{{ url_for(domain.url, "lxml") }}" target="_via3">LXML</a>
-                </td>
-            </tr>
-        {% endfor %}
-        </table>
+            {% for domain in domains %}
+                <tr>
+                    <td>{{ domain.name }}</td>
+                    <td>{{ domain.count }}</td>
+                    <td><a href="{{ domain.url }}" target="_orig">Original</a></td>
+                    <td><a href="{{ legacy_url_for(domain.url) }}" target="_via">Via</a></td>
+                    <td>
+                        <a href={{ url_for(domain.url, "null") }} target="_via3">Null</a>
+                        <a href={{ url_for(domain.url, "htmlparser") }} target="_via3">HTMLParser</a>
+                        <a href={{ url_for(domain.url, "lxml") }} target="_via3">LXML</a>
+                    </td>
+                    <td>
+                        <textarea cols="40" rows="1" name="comment|{{ domain.name }}">{{ comments.get(domain.name) }}</textarea>
+                    </td>
+                </tr>
+            {% endfor %}
+            </table>
+        </form>
     </body>
 </html>
 
