@@ -36,7 +36,8 @@ class LXMLRewriter(AbstractHTMLRewriter):
         head.insert(0, canonical_link)
 
         # Also set the base to try and catch relative links that escape us
-        base = etree.Element("base", {"href": self.url_rewriter.rewrite_html(doc_url)})
+        #base = etree.Element("base", {"href": self.url_rewriter.rewrite_html(doc_url)})
+        base = etree.Element("base", {"href": doc_url})
         head.insert(0, base)
 
         # Inject the script contents

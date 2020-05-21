@@ -1,11 +1,12 @@
 settings:
   # Sadly YAML doesn't let you redeclare an anchor...
   - &html_links REWRITE_HTML
-  - &external_css REWRITE_CSS
-  - &external_js REWRITE_JS
+  - &external_css NONE
+  - &external_js NONE
   - &fonts PROXY_STATIC
-  - &images MAKE_ABSOLUTE
-  - &forms MAKE_ABSOLUTE
+  - &images NONE
+  - &forms NONE
+  - &default NONE
 
 extensions:
   - &image_ext [png, jpg, jpeg, gif, svg]
@@ -73,4 +74,4 @@ rules:
 
   # Default
   - match: {}
-    action: *MAKE_ABSOLUTE
+    action: *default
