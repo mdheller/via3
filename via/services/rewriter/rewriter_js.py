@@ -24,6 +24,8 @@ class JSRewriter(AbstractRewriter):
             new_url = self.url_rewriter.rewrite(
                 tag="external-js", attribute=None, url=url
             )
+            if not new_url:
+                continue
 
             if new_url != url:
                 print("REPLACE!", url, ">>", new_url)

@@ -23,6 +23,8 @@ class CSSRewriter(AbstractRewriter):
             new_url = self.url_rewriter.rewrite(
                 tag="external-css", attribute=None, url=url
             )
+            if not new_url:
+                continue
 
             if new_url != url:
                 replacements.append((match.group(0), f"url({quotes}{new_url}{quotes})"))
