@@ -23,23 +23,23 @@ class RewriterService:
         self._request = request
 
     def get_js_rewriter(self, document_url):
-        return JSRewriter(self._get_url_rewriter(document_url))
+        return JSRewriter(self._get_url_rewriter(document_url, "rules_html.yaml"))
 
     def get_css_rewriter(self, document_url):
-        return CSSRewriter(self._get_url_rewriter(document_url))
+        return CSSRewriter(self._get_url_rewriter(document_url, "rules_css.yaml"))
 
-    def get_html_rewriter(self, document_url):
+    def get_html_rewriter(self, document_url, ):
         via_config, h_config = Configuration.extract_from_params(self._request.params)
 
-        url_rewriter = self._get_url_rewriter(document_url)
+        url_rewriter = self._get_url_rewriter(document_url, "rules_html.yaml")
 
         return self.HTML_REWRITERS.get(via_config.get("rewriter"))(
             url_rewriter, h_config=h_config,
         )
 
-    def _get_url_rewriter(self, document_url):
+    def _get_url_rewriter(self, document_url, rule_file):
         ruleset = Ruleset.from_yaml(
-            resource_filename("via.services.rewriter", "rules.yaml")
+            resource_filename("via.services.rewriter", rule_file)
         )
 
         return URLRewriter(
