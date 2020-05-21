@@ -1,6 +1,7 @@
 import requests
-from pyramid.httpexceptions import HTTPNotFound
+from pyramid.httpexceptions import HTTPConflict, HTTPNotFound
 from pyramid.response import Response
+from requests.exceptions import RequestException
 
 from via.services.timeit import timeit
 
@@ -17,12 +18,15 @@ class Document:
         print("Requesting URL:", self.url, headers)
 
         with timeit("retrieve content"):
-            original = requests.get(
-                self.url,
-                # Pass the user agent
-                headers={"User-Agent": user_agent},
-                timeout=timeout,
-            )
+            try:
+                original = requests.get(
+                    self.url,
+                    # Pass the user agent
+                    headers={"User-Agent": user_agent},
+                    timeout=timeout,
+                )
+            except RequestException as err:
+                raise HTTPConflict(f"Cannot get '{self.url}' with error: {err}")
 
         if expect_type:
             content_type = original.headers["Content-Type"]
