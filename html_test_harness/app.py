@@ -1,6 +1,6 @@
 from urllib.parse import urlparse, urlencode
-
-from flask import Flask, render_template
+import json
+from flask import Flask, render_template, request
 
 from html_test_harness.domain_store import DomainStore
 from html_test_harness.domain import Domain
@@ -45,8 +45,33 @@ def legacy_url_for(link):
 
 @app.route('/')
 def list():
-    return render_template('list.html.jinja2', domains=DOMAINS, url_for=url_for, legacy_url_for=legacy_url_for)
+    try:
+        with open('comments.json') as handle:
+            comments = json.load(handle)
+    except FileNotFoundError:
+        comments = {}
 
+    return render_template(
+        'list.html.jinja2',
+        domains=DOMAINS,
+        url_for=url_for,
+        legacy_url_for=legacy_url_for,
+        comments=comments,
+    )
+
+
+@app.route('/save_comments', methods=["POST"])
+def save_comments():
+    comments = {}
+
+    for name, value in request.form.items():
+        _, domain = name.split('|', 1)
+        comments[domain] = value
+
+    with open('comments.json', 'w') as handle:
+        json.dump(comments, handle)
+
+    return list()
 
 if __name__ == '__main__':
     app.run(debug=True)
