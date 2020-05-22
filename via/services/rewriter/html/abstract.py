@@ -2,13 +2,7 @@ import os
 
 from jinja2 import Environment, PackageLoader, select_autoescape
 
-
-class AbstractRewriter:
-    def __init__(self, url_rewriter):
-        self.url_rewriter = url_rewriter
-
-    def rewrite(self, doc):
-        raise NotImplementedError()
+from via.services.rewriter.interface import AbstractRewriter
 
 
 class AbstractHTMLRewriter(AbstractRewriter):
@@ -34,8 +28,3 @@ class AbstractHTMLRewriter(AbstractRewriter):
             h_embed_url=os.environ.get("H_EMBED_URL", "https://hypothes.is/embed.js"),
             hypothesis_config=self._h_config,
         )
-
-
-class NullRewriter(AbstractHTMLRewriter):
-    def rewrite(self, doc):
-        return doc.content.decode("utf-8")
