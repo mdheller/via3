@@ -59,7 +59,7 @@ class AbstractHTMLRewriter(AbstractRewriter):
         }
 
         return f"""<script type="text/javascript">
-            var VIA_REWRITER_SETTINGS = {json.dumps(settings)};
+            const VIA_REWRITER_SETTINGS = {json.dumps(settings)};
         </script>
         <script src="{self._static_url('via:static/js/rewriter.js')}">
         """
