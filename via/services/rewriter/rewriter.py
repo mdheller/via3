@@ -38,4 +38,4 @@ class AbstractHTMLRewriter(AbstractRewriter):
 
 class NullRewriter(AbstractHTMLRewriter):
     def rewrite(self, doc):
-        return doc.content.decode('utf-8')
+        return doc.content.decode("utf-8")
