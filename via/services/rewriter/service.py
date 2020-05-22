@@ -28,7 +28,9 @@ class RewriterService:
     def get_css_rewriter(self, document_url):
         return CSSRewriter(self._get_url_rewriter(document_url, "rules_css.yaml"))
 
-    def get_html_rewriter(self, document_url, ):
+    def get_html_rewriter(
+        self, document_url,
+    ):
         via_config, h_config = Configuration.extract_from_params(self._request.params)
 
         url_rewriter = self._get_url_rewriter(document_url, "rules_html.yaml")
