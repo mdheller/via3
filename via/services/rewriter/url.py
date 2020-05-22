@@ -60,13 +60,24 @@ class URLRewriter:
 
         return self.ACTION_MAP[action](self, url)
 
+    def get_templates(self, template_var="__URL__"):
+        return {
+            "proxyStatic": self._static_url + template_var,
+            "rewriteCSS": self._route_url("view_css", template_var),
+            "rewriteHTML": self._route_url("view_html", template_var),
+            "rewriteJS": self._route_url("view_js", template_var),
+        }
+
     def _rewrite_end_point(self, endpoint, url):
         url = self.make_absolute(url)
 
         if self.can_proxy(url):
-            params = dict(self._params)
-            params["url"] = url
-
-            return self._route_url(endpoint, _query=params)
+            return self._proxy_url(endpoint, url)
 
         return url
+
+    def _proxy_url(self, endpoint, url):
+        params = dict(self._params)
+        params["url"] = url
+
+        return self._route_url(endpoint, _query=params)

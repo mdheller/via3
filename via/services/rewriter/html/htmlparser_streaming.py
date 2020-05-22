@@ -72,4 +72,7 @@ class HTMLParserRewriter(AbstractHTMLRewriter):
             while parser.buffer:
                 yield parser.buffer.popleft().encode("utf-8")
 
+            while parser.buffer:
+                yield parser.buffer.popleft().encode("utf-8")
+
             parser.close()

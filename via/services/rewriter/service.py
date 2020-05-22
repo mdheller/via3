@@ -23,7 +23,7 @@ class RewriterService:
         url_rewriter = self._get_url_rewriter(document_url, Rules.html())
 
         return HTML_REWRITERS.get(via_config.get("rewriter"))(
-            url_rewriter, h_config=h_config,
+            url_rewriter, h_config=h_config, static_url=self._request.static_url
         )
 
     def _get_url_rewriter(self, document_url, ruleset):
