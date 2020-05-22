@@ -62,10 +62,11 @@ class URLRewriter:
 
     def get_templates(self, template_var="__URL__"):
         return {
-            "proxyStatic": self._static_url + template_var,
-            "rewriteCSS": self._proxy_url("view_css", template_var),
-            "rewriteHTML": self._proxy_url("view_html", template_var),
-            "rewriteJS": self._proxy_url("view_js", template_var),
+            "MAKE_ABSOLUTE": self.make_absolute(template_var),
+            "PROXY_STATIC": self._static_url + template_var,
+            "REWRITE_CSS": self._proxy_url("view_css", template_var),
+            "REWRITE_HTML": self._proxy_url("view_html", template_var),
+            "REWRITE_JS": self._proxy_url("view_js", template_var),
         }
 
     def _rewrite_end_point(self, endpoint, url):
