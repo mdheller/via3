@@ -14,11 +14,11 @@ class Rules:
 
     @classmethod
     def css(cls):
-        return cls._load("rules_css.yaml")
+        return cls._load("css.yaml")
 
     @classmethod
     def html(cls):
-        return cls._load("rules_html.yaml")
+        return cls._load("html.yaml")
 
     @classmethod
     @lru_cache(4)
