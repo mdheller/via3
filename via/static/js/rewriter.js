@@ -2,9 +2,16 @@
 console.log('Initializing Via DOM API monkey-patching');
 
 function staticProxyURL(url) {
-  const absUrl = new URL(url, document.baseURI).toString();
+  console.log("Getting static proxy URL for", url);
+
+  const absUrl = new URL(url, VIA_REWRITER_SETTINGS.baseUrl).toString();
+  console.log("--- ABS URL", absUrl);
+
   const proxyUrlTemplate = VIA_REWRITER_SETTINGS.urlTemplates.PROXY_STATIC;
-  return proxyUrlTemplate.replace('__URL__', absUrl);
+  const final = proxyUrlTemplate.replace('__URL__', absUrl);
+
+  console.log("--- FINAL", final);
+  return final;
 }
 
 const origFetch = window.fetch;
