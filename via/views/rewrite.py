@@ -62,7 +62,7 @@ def _rewrite(context, request, expect_type, rewrite_provider, timeout=10):
 
     if rewriter.streaming:
         # We can't get a timing here because it happens elsewhere
-        response.app_iter = rewriter.rewrite(doc)
+        response.app_iter = rewriter.streaming_rewrite(doc)
         return response
 
     with timeit(f"{expect_type} rewriting total"):
