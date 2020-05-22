@@ -2,7 +2,7 @@ from html import escape
 from html.parser import HTMLParser
 from io import StringIO
 
-from via.services.rewriter.rewriter import AbstractHTMLRewriter
+from via.services.rewriter.html.abstract import AbstractHTMLRewriter
 from via.services.rewriter.ruleset import Attribute
 from via.services.timeit import timeit
 

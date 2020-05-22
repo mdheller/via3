@@ -1,19 +1,18 @@
 import re
 
-from via.services.rewriter.rewriter import AbstractRewriter
+from via.services.rewriter.interface import AbstractRewriter
 
 
-class JSRewriter(AbstractRewriter):
-    QUOTED_URL_REGEX = re.compile(r"[\"'](https?://[^\"']+)[\"']", re.IGNORECASE)
+class CSSRewriter(AbstractRewriter):
+    URL_REGEX = re.compile(r"url\(([^)]+)\)", re.IGNORECASE)
 
     def rewrite(self, doc):
         content = doc.content.decode("utf-8")
 
         replacements = []
 
-        for match in self.QUOTED_URL_REGEX.finditer(content):
+        for match in self.URL_REGEX.finditer(content):
             url = match.group(1)
-            print("JS FIND!", url)
 
             quotes = ""
 
@@ -22,14 +21,13 @@ class JSRewriter(AbstractRewriter):
                 url = url.strip("\"'")
 
             new_url = self.url_rewriter.rewrite(
-                tag="external-js", attribute=None, url=url
+                tag="external-css", attribute=None, url=url
             )
             if not new_url:
                 continue
 
             if new_url != url:
-                print("REPLACE!", url, ">>", new_url)
-                # replacements.append((match.group(0), f"url({quotes}{new_url}{quotes})"))
+                replacements.append((match.group(0), f"url({quotes}{new_url}{quotes})"))
 
         for find, replace in replacements:
             content = content.replace(find, replace)

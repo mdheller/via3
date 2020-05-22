@@ -1,49 +1,32 @@
-from pkg_resources import resource_filename
-
 from via.configuration import Configuration
-from via.services.rewriter.rewriter import NullRewriter
-from via.services.rewriter.rewriter_css import CSSRewriter
-from via.services.rewriter.rewriter_html_htmlparser import HTMLParserRewriter
-from via.services.rewriter.rewriter_html_lxml import LXMLRewriter
-from via.services.rewriter.rewriter_js import JSRewriter
-from via.services.rewriter.rewriter_url import URLRewriter
-from via.services.rewriter.ruleset import Ruleset
+from via.services.rewriter.css import CSSRewriter
+from via.services.rewriter.html import HTML_REWRITERS
+from via.services.rewriter.js import JSRewriter
+from via.services.rewriter.ruleset import Rules
+from via.services.rewriter.url import URLRewriter
 
 
 class RewriterService:
-    HTML_REWRITERS = {
-        "htmlparser": HTMLParserRewriter,
-        "lxml": LXMLRewriter,
-        "null": NullRewriter,
-        None: LXMLRewriter,
-    }
-
     def __init__(self, context, request):
         self._context = context
         self._request = request
 
     def get_js_rewriter(self, document_url):
-        return JSRewriter(self._get_url_rewriter(document_url, "rules_html.yaml"))
+        return JSRewriter(self._get_url_rewriter(document_url, Rules.js()))
 
     def get_css_rewriter(self, document_url):
-        return CSSRewriter(self._get_url_rewriter(document_url, "rules_css.yaml"))
+        return CSSRewriter(self._get_url_rewriter(document_url, Rules.css()))
 
-    def get_html_rewriter(
-        self, document_url,
-    ):
+    def get_html_rewriter(self, document_url):
         via_config, h_config = Configuration.extract_from_params(self._request.params)
 
-        url_rewriter = self._get_url_rewriter(document_url, "rules_html.yaml")
+        url_rewriter = self._get_url_rewriter(document_url, Rules.html())
 
-        return self.HTML_REWRITERS.get(via_config.get("rewriter"))(
+        return HTML_REWRITERS.get(via_config.get("rewriter"))(
             url_rewriter, h_config=h_config,
         )
 
-    def _get_url_rewriter(self, document_url, rule_file):
-        ruleset = Ruleset.from_yaml(
-            resource_filename("via.services.rewriter", rule_file)
-        )
-
+    def _get_url_rewriter(self, document_url, ruleset):
         return URLRewriter(
             rules=ruleset,
             doc_url=document_url,
