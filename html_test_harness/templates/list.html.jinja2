@@ -45,6 +45,7 @@ textarea {
                         <a href={{ url_for(domain.url, "null") }} target="_via3">Null</a>
                         <a href={{ url_for(domain.url, "htmlparser") }} target="_via3">HTMLParser</a>
                         <a href={{ url_for(domain.url, "lxml") }} target="_via3">LXML</a>
+                        <a href={{ url_for(domain.url, "lxml_stream") }} target="_via3">Stream</a>
                     </td>
                     <td>
                         <textarea cols="40" rows="1" name="comment|{{ domain.name }}">{{ comments.get(domain.name) }}</textarea>

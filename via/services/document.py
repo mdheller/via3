@@ -1,6 +1,5 @@
 import requests
 from pyramid.httpexceptions import HTTPConflict, HTTPNotFound
-from pyramid.response import Response
 from requests.exceptions import RequestException
 
 from via.services.timeit import timeit
@@ -12,7 +11,7 @@ class Document:
         self.original = None
         self.content = None
 
-    def get_original(self, headers, expect_type=None, timeout=10):
+    def get_original(self, headers, expect_type=None, timeout=10, stream=False):
         user_agent = headers.get("User-Agent")
 
         print("Requesting URL:", self.url, headers)
@@ -24,6 +23,7 @@ class Document:
                     # Pass the user agent
                     headers={"User-Agent": user_agent},
                     timeout=timeout,
+                    stream=stream,
                 )
             except RequestException as err:
                 raise HTTPConflict(f"Cannot get '{self.url}' with error: {err}")
@@ -36,16 +36,13 @@ class Document:
                 )
 
         self.original = original
-        self.content = original.content
+        if stream:
+            self.content = None
+        else:
+            self.content = original.content
 
-    def response(self):
-        # TODO! Pyramid response construction here seems messy. Maybe we could
-        # just return a dict of the right keys, or is that just dodging the
-        # issue?
-
-        content_type = self.original.headers["Content-Type"]
-        response = Response(
-            body=self.content.encode("utf-8"), content_type=content_type
-        )
+    def update_response(self, response):
+        """Add relevant settings from the original request."""
+        response.content_type = self.original.headers["Content-Type"]
 
         return response

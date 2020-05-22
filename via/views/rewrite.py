@@ -1,4 +1,5 @@
 from pyramid import view
+from pyramid.response import Response
 
 from via.services.document import Document
 from via.services.rewriter import RewriterService
@@ -44,14 +45,29 @@ def view_html(context, request):
 
 
 def _rewrite(context, request, expect_type, rewrite_provider, timeout=10):
+    print("------------------------------")
     document_url = context.url()
+    rewriter = rewrite_provider(document_url)
 
     doc = Document(document_url)
-    doc.get_original(headers=request.headers, expect_type=expect_type, timeout=timeout)
+    doc.get_original(
+        headers=request.headers,
+        expect_type=expect_type,
+        timeout=timeout,
+        stream=rewriter.streaming,
+    )
 
-    rewriter = rewrite_provider(doc.url)
+    response = Response()
+    doc.update_response(response)
+
+    if rewriter.streaming:
+        # We can't get a timing here because it happens elsewhere
+        response.app_iter = rewriter.rewrite(doc)
+        return response
 
     with timeit(f"{expect_type} rewriting total"):
         doc.content = rewriter.rewrite(doc)
 
-    return doc.response()
+    response.body = doc.content.encode("utf-8")
+
+    return response
