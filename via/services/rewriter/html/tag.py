@@ -21,12 +21,15 @@ class TagFactory:
             return ""
 
         parts = []
-        for key, value in attrs:
+
+        rel = attrs.get("rel")
+
+        for key, value in attrs.items():
             if value is None:
                 parts.append(key)
             else:
                 if Attribute.is_interesting(name, key):
-                    new_value = self._url_rewriter.rewrite(name, key, value)
+                    new_value = self._url_rewriter.rewrite(name, key, value, rel=rel)
                     if new_value:
                         value = new_value
 

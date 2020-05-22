@@ -15,7 +15,7 @@ class ParserCallback:
         self._inserts = inserts
 
     def start(self, tag, attrib):
-        self.buffer.add(self._tag_factory.start(tag, attrib.items()))
+        self.buffer.add(self._tag_factory.start(tag, attrib))
 
         if tag == "head":
             self.buffer.add(self._inserts.get("head_top", ""))
