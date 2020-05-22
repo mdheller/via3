@@ -15,7 +15,7 @@ class StreamingParser(HTMLParser):
         self.handle = StringIO()
 
     def handle_starttag(self, tag, attrs):
-        self.buffer.add(self.tag_factory.start(tag, attrs))
+        self.buffer.add(self.tag_factory.start(tag, dict(attrs)))
 
         if tag == "head":
             self.buffer.add(self.inserts.get("head_top", ""))
@@ -27,7 +27,7 @@ class StreamingParser(HTMLParser):
         self.buffer.add(self.tag_factory.end(tag))
 
     def handle_startendtag(self, tag, attrs):
-        self.buffer.add(self.tag_factory.self_closing(tag, attrs))
+        self.buffer.add(self.tag_factory.self_closing(tag, dict(attrs)))
 
     def handle_data(self, data):
         # Raw content
