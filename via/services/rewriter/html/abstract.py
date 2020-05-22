@@ -54,12 +54,12 @@ class AbstractHTMLRewriter(AbstractRewriter):
     def _client_side_rewriter_inject(self, doc_url):
         settings = {
             "baseUrl": doc_url,
-            **self.url_rewriter.get_templates(),
+            "urlTemplates": self.url_rewriter.get_templates(),
             "ruleset": Rules.js().as_list(),
         }
 
         return f"""<script type="text/javascript">
             const VIA_REWRITER_SETTINGS = {json.dumps(settings)};
         </script>
-        <script src="{self._static_url('via:static/js/rewriter.js')}">
+        <script src="{self._static_url('via:static/js/rewriter.js')}" type="text/javascript">
         """
