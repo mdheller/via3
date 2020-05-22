@@ -42,6 +42,12 @@ class Ruleset:
             )
         )
 
+    def as_list(self):
+        return [
+            {"match": rule.as_dict(), "action": action.name}
+            for rule, action in self.ruleset
+        ]
+
     def action_for(self, tag, attr, url, rel=None):
         ext = self.get_extension(url)
 
@@ -75,12 +81,20 @@ class Ruleset:
 
 class Rule:
     WILD = object()
+    NAMES = ("tag", "attr", "ext", "rel")
 
     def __init__(self, tag=WILD, attr=WILD, ext=WILD, rel=WILD):
         self.parts = tuple(
             set(part) if isinstance(part, list) else part
             for part in (tag, attr, ext, rel)
         )
+
+    def as_dict(self):
+        return {
+            key: list(value) if isinstance(value, set) else value
+            for key, value in zip(self.NAMES, self.parts)
+            if value is not self.WILD
+        }
 
     def applies(self, tag, attribute, extension, rel):
         for our_value, other_value in zip(self.parts, (tag, attribute, extension, rel)):
@@ -100,7 +114,7 @@ class Rule:
 
     def __repr__(self):
         parts = []
-        for name, value in zip(("tag", "attr", "ext", "rel"), self.parts):
+        for name, value in zip(self.NAMES, self.parts):
             if value is not self.WILD:
                 value = f'"{value}"' if isinstance(value, str) else value
                 parts.append(f"{name}={value}")

@@ -1,0 +1,1 @@
+/* Javascript interceptions for rewriting HTML pages */
