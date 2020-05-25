@@ -19,7 +19,7 @@ class URLRewriter:
 
     def can_proxy(self, url):
         # We can't really do anything with ftp:// or data://
-        return url.startswith("http:") or url.startswith("https:")
+        return url.startswith("https:") or url.startswith("http:")
 
     def make_absolute(self, url):
         if url.startswith("//"):
