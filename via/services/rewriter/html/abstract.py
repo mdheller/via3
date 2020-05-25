@@ -54,6 +54,7 @@ class AbstractHTMLRewriter(AbstractRewriter):
     def _client_side_rewriter_inject(self, doc_url):
         settings = {
             "baseUrl": doc_url,
+            "viaUrl": self.url_rewriter.rewrite_html(doc_url),
             "urlTemplates": self.url_rewriter.get_templates(),
             "ruleset": Rules.js().as_list(),
         }
