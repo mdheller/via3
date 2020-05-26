@@ -20,7 +20,7 @@ class AbstractRewriter:
 
         with timeit("streaming rewrite time"):
             for chunk in doc.original.iter_content(
-                chunk_size=self.chunk_size_in, decode_unicode=True
+                chunk_size=self.chunk_size_in
             ):
                 parser.feed(chunk)
 
