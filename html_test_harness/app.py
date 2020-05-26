@@ -33,7 +33,7 @@ DOMAINS, DOMAINS_BY_URL = get_domains()
 
 
 def url_for(link, rewriter):
-    url = urlparse('http://localhost:9082/html')
+    url = urlparse('http://localhost:9083/html')
     url = url._replace(query=urlencode({'url': link, 'via.rewriter': rewriter}))
 
     return url.geturl()
