@@ -14,6 +14,9 @@ class StreamingParser(HTMLParser):
         self.tag_factory = tag_factory
         self.handle = StringIO()
 
+    def feed(self, data):
+        super().feed(data.decode('utf-8'))
+
     def handle_starttag(self, tag, attrs):
         self.buffer.add(self.tag_factory.start(tag, dict(attrs)))
 
