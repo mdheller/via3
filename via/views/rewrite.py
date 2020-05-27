@@ -1,6 +1,7 @@
 from pyramid import view
 from pyramid.response import Response
 
+from via.configuration import Configuration
 from via.services.document import Document
 from via.services.rewriter import RewriterService
 from via.services.timeit import timeit
@@ -46,10 +47,12 @@ def view_html(context, request):
 
 def _rewrite(context, request, expect_type, rewrite_provider, timeout=10):
     print("------------------------------")
+    via_config, h_config = Configuration.extract_from_params(request.params)
+
     document_url = context.url()
     rewriter = rewrite_provider(document_url)
 
-    doc = Document(document_url)
+    doc = Document(document_url, not via_config.get("no_ssl"))
     doc.get_original(
         headers=request.headers,
         expect_type=expect_type,

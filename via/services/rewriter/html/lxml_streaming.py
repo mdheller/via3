@@ -1,7 +1,7 @@
 from lxml.html import HTMLParser
 
 from via.services.rewriter.html.abstract import AbstractHTMLRewriter
-from via.services.rewriter.html.tag import TagFactory
+from via.services.rewriter.html.tag_factory import TagFactory
 
 
 class ParserCallback:

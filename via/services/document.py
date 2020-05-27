@@ -6,10 +6,11 @@ from via.services.timeit import timeit
 
 
 class Document:
-    def __init__(self, document_url):
+    def __init__(self, document_url, verify_ssl=True):
         self.url = document_url
         self.original = None
         self.content = None
+        self.verify_ssl = verify_ssl
 
     def get_original(self, headers, expect_type=None, timeout=10, stream=False):
         user_agent = headers.get("User-Agent")
@@ -24,6 +25,7 @@ class Document:
                     headers={"User-Agent": user_agent},
                     timeout=timeout,
                     stream=stream,
+                    verify=self.verify_ssl,
                 )
             except RequestException as err:
                 raise HTTPConflict(f"Cannot get '{self.url}' with error: {err}")
