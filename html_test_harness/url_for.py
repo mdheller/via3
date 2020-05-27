@@ -4,8 +4,8 @@ from urllib.parse import urlparse, urlencode
 
 class URLFor:
     @classmethod
-    def proxy_rewriter(cls, link, rewriter):
-        return cls.rewriter(cls.nginx_proxy(link), rewriter)
+    def proxy_rewriter(cls, link, rewriter, extras=None):
+        return cls.rewriter(cls.nginx_proxy(link), rewriter, extras)
 
     @classmethod
     def nginx_proxy(cls, link):
@@ -23,10 +23,13 @@ class URLFor:
         return url.geturl()
 
     @classmethod
-    def rewriter(cls, link, rewriter):
+    def rewriter(cls, link, rewriter, extras=None):
         url = urlparse('http://localhost:9083/html')
-        url = url._replace(
-            query=urlencode({'url': link, 'via.rewriter': rewriter}))
+        query = {'url': link, 'via.rewriter': rewriter}
+        if extras:
+            query.update(extras)
+
+        url = url._replace(query=urlencode(query))
 
         return url.geturl()
 

@@ -1,9 +1,9 @@
-from urllib.parse import urlparse, urlencode
 import json
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, Response
 
-from html_test_harness.domain_store import DomainStore
 from html_test_harness.domain import Domain
+from html_test_harness.domain_store import DomainStore
+from html_test_harness.url_for import URLFor
 
 app = Flask(__name__)
 
@@ -19,28 +19,17 @@ def get_domains():
         if not domain.is_valid:
             continue
 
-        if count > 100:
-            break
+        if count < 100:
+            domains.append(domain)
+
         count += 1
 
-        domains.append(domain)
         domains_by_url[domain.url] = domain
 
     return domains, domains_by_url
 
 
 DOMAINS, DOMAINS_BY_URL = get_domains()
-
-
-def url_for(link, rewriter):
-    url = urlparse('http://localhost:9083/html')
-    url = url._replace(query=urlencode({'url': link, 'via.rewriter': rewriter}))
-
-    return url.geturl()
-
-
-def legacy_url_for(link):
-    return f'http://localhost:9080/{link}'
 
 
 @app.route('/')
@@ -54,9 +43,22 @@ def list():
     return render_template(
         'list.html.jinja2',
         domains=DOMAINS,
-        url_for=url_for,
-        legacy_url_for=legacy_url_for,
+        url_for=URLFor,
         comments=comments,
+    )
+
+
+@app.route('/proxy')
+def proxy_example():
+    url = request.args['url']
+    domain = DOMAINS_BY_URL[url]
+
+    original = domain.response
+
+    return Response(
+        original.content,
+        status=200,
+        #headers=dict(original.headers),
     )
 
 

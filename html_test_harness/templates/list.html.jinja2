@@ -40,12 +40,12 @@ textarea {
                     <td>{{ domain.name }}</td>
                     <td>{{ domain.count }}</td>
                     <td><a href="{{ domain.url }}" target="_orig">Original</a></td>
-                    <td><a href="{{ legacy_url_for(domain.url) }}" target="_via">Via</a></td>
+                    <td><a href="{{ url_for.legacy_via(domain.url) }}" target="_via">Via</a></td>
                     <td>
-                        <a href={{ url_for(domain.url, "null") }} target="_via3">Null</a>
-                        <a href={{ url_for(domain.url, "htmlparser") }} target="_via3">HTMLParser</a>
-                        <a href={{ url_for(domain.url, "lxml") }} target="_via3">LXML</a>
-                        <a href={{ url_for(domain.url, "lxml_stream") }} target="_via3">Stream</a>
+                        <a href={{ url_for.rewriter(domain.url, "null") }} target="_via3">Null</a>
+                        <a href={{ url_for.rewriter(domain.url, "htmlparser") }} target="_via3">HTMLParser</a>
+                        <a href={{ url_for.rewriter(domain.url, "lxml") }} target="_via3">LXML</a>
+                        <a href={{ url_for.rewriter(domain.url, "lxml_stream") }} target="_via3">Stream</a>
                     </td>
                     <td>
                         <textarea cols="40" rows="1" name="comment|{{ domain.name }}">{{ comments.get(domain.name) }}</textarea>
