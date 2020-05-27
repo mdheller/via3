@@ -2,7 +2,7 @@ from html.parser import HTMLParser
 from io import StringIO
 
 from via.services.rewriter.html.abstract import AbstractHTMLRewriter
-from via.services.rewriter.html.tag import TagFactory
+from via.services.rewriter.html.tag_factory import TagFactory
 
 
 class StreamingParser(HTMLParser):
@@ -16,9 +16,9 @@ class StreamingParser(HTMLParser):
 
     def feed(self, data):
         try:
-            super().feed(data.decode('utf-8'))
+            super().feed(data.decode("utf-8"))
         except UnicodeDecodeError:
-            super().feed(data.decode('iso-8859-1'))
+            super().feed(data.decode("iso-8859-1"))
 
     def handle_starttag(self, tag, attrs):
         self.buffer.add(self.tag_factory.start(tag, dict(attrs)))

@@ -22,9 +22,19 @@ class RewriterService:
 
         url_rewriter = self._get_url_rewriter(document_url, Rules.html())
 
-        return HTML_REWRITERS.get(via_config.get("rewriter"))(
+        rewriter = HTML_REWRITERS.get(via_config.get("rewriter"))(
             url_rewriter, h_config=h_config, static_url=self._request.static_url
         )
+
+        chunk_size_in = via_config.get("csi")
+        if chunk_size_in:
+            rewriter.chunk_size_in = int(chunk_size_in)
+
+        chunk_size_out = via_config.get("cso")
+        if chunk_size_out:
+            rewriter.chunk_size_out = int(chunk_size_out)
+
+        return rewriter
 
     def _get_url_rewriter(self, document_url, ruleset):
         return URLRewriter(

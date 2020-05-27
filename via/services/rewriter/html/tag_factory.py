@@ -4,6 +4,9 @@ from via.services.rewriter.ruleset import Attribute
 
 
 class TagFactory:
+    # Should we rewrite or not?
+    rewrite = True
+
     def __init__(self, url_rewriter):
         self._url_rewriter = url_rewriter
 
@@ -28,7 +31,7 @@ class TagFactory:
             if value is None:
                 parts.append(key)
             else:
-                if Attribute.is_interesting(name, key):
+                if self.rewrite and Attribute.is_interesting(name, key):
                     new_value = self._url_rewriter.rewrite(name, key, value, rel=rel)
                     if new_value:
                         value = new_value

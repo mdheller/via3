@@ -25,3 +25,23 @@ class NullRewriter(AbstractHTMLRewriter):
             content = self.HEAD_TAG_CLOSE.sub(f"{head_bottom}\\1", content, count=1)
 
         return content
+
+
+class NullParser:
+    def __init__(self, buffer):
+        self.buffer = buffer
+
+    def feed(self, data):
+        # The encoding isn't right, but it works, and this is only for
+        # speed testing
+        self.buffer.add(data.decode("iso-8859-1"))
+
+    def close(self):
+        pass
+
+
+class NullStreamingRewriter(AbstractHTMLRewriter):
+    streaming = True
+
+    def _get_streaming_parser(self, doc, buffer):
+        return NullParser(buffer)
