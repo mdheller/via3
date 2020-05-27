@@ -8,7 +8,7 @@ class NullRewriter(AbstractHTMLRewriter):
     HEAD_TAG_CLOSE = re.compile(r"(<\s*/\s*head\s*>)", re.IGNORECASE)
 
     def rewrite(self, doc):
-        content = doc.content.decode("utf-8")
+        content = doc.content.decode("iso-8859-1")
         content = self._do_injects(content, doc.url)
 
         return content

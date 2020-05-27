@@ -15,7 +15,10 @@ class StreamingParser(HTMLParser):
         self.handle = StringIO()
 
     def feed(self, data):
-        super().feed(data.decode('utf-8'))
+        try:
+            super().feed(data.decode('utf-8'))
+        except UnicodeDecodeError:
+            super().feed(data.decode('iso-8859-1'))
 
     def handle_starttag(self, tag, attrs):
         self.buffer.add(self.tag_factory.start(tag, dict(attrs)))
