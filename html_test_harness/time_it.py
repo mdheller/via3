@@ -29,7 +29,7 @@ def get_em(urls_to_request):
     ms_callback = lambda ms: ttfb.append(ms)
 
     for pos, url in enumerate(urls_to_request):
-        if pos % 100 == 0:
+        if pos % 250 == 0:
             print(pos)
 
         try:
@@ -45,20 +45,16 @@ def get_em(urls_to_request):
 
 url_for = URLFor()
 
-#rewriter = 'htmlparser'
-#rewriter = 'lxml'
-#rewriter = 'lxml_stream'
-rewriter = 'null'
+for rewriter in ('null', 'null_stream', 'lxml', 'lxml_stream', 'htmlparser'):
 
-url_gen = lambda url: url_for.proxy_rewriter(url, rewriter)
-#url_gen = lambda url: url_for.nginx_proxy(url)
+    url_gen = lambda url: url_for.proxy_rewriter(url, rewriter)
+    #url_gen = lambda url: url_for.nginx_proxy(url)
 
+    urls_to_request = make_urls(url_gen)
 
-urls_to_request = make_urls(url_gen)
+    with timeit(rewriter):
+        total, error_urls = get_em(urls_to_request)
+        print()
 
-for url in urls_to_request[:4]:
-    print(url)
-
-with timeit("Get 'em all"):
-    total, error_urls = get_em(urls_to_request)
     print("TOTAL", total, "errors", len(error_urls))
+

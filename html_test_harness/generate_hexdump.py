@@ -1,10 +1,15 @@
-from html_test_harness.domain import Domain
+"""
+Write out example URL content to _hexdump to serve it from NGINX.
 
+This is to allow us to test without speed being a concern, or hammering
+external sites.
+"""
+
+# For pickle
+from html_test_harness.domain import Domain
 from html_test_harness.domain_store import DomainStore
 
 import hashlib
-
-def name(url):
 
 
 for domain in DomainStore():
@@ -16,5 +21,5 @@ for domain in DomainStore():
     hash.update(domain.url.encode('utf-8'))
     filename = hash.hexdigest() + '.html'
 
-    with open("hexdump/" + filename, 'wb') as handle:
+    with open("_hexdump/" + filename, 'wb') as handle:
         handle.write(domain.response.content)
