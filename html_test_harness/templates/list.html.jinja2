@@ -27,6 +27,7 @@ textarea {
             <button>Save comments</button>
             <table>
                 <tr>
+                    <th>#</th>
                     <th>Domain name</th>
                     <th>Count</th>
                     <th>Original link</th>
@@ -37,6 +38,7 @@ textarea {
 
             {% for domain in domains %}
                 <tr>
+                    <td>{{ loop.index }}</td>
                     <td>{{ domain.name }}</td>
                     <td>{{ domain.count }}</td>
                     <td><a href="{{ domain.url }}" target="_orig">Original</a></td>

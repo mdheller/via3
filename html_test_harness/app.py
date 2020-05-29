@@ -29,6 +29,26 @@ def get_domains():
     return domains, domains_by_url
 
 
+def _sort_domains(domains, comments):
+    if not comments:
+        return domains
+
+    def _key(domain):
+        if domain.name not in comments:
+            return 3, None
+
+        comment = comments[domain.name].lower()
+        if 'bust' in comment:
+            return 0, comment
+
+        if 'usable' in comment:
+            return 1, comment
+
+        return 2, comment
+
+    return sorted(domains, key=_key)
+
+
 DOMAINS, DOMAINS_BY_URL = get_domains()
 
 
@@ -37,12 +57,16 @@ def list():
     try:
         with open('comments.json') as handle:
             comments = json.load(handle)
+
+        domains = _sort_domains(DOMAINS, comments)
+
     except FileNotFoundError:
         comments = {}
+        domains = DOMAINS
 
     return render_template(
         'list.html.jinja2',
-        domains=DOMAINS,
+        domains=domains,
         url_for=URLFor,
         comments=comments,
     )
