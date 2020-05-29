@@ -1,7 +1,7 @@
 settings:
   # Sadly YAML doesn't let you redeclare an anchor...
   - &html_links REWRITE_HTML
-  - &external_js NONE
+  - &external_js PROXY_STATIC
   # For fonts to avoid CORS issues you must proxy them. For that to work we must
   # rewrite them in CSS (internal and external)
   - &fonts PROXY_STATIC
@@ -36,6 +36,16 @@ rules:
   - match: {ext: *font_ext}
     action: *fonts
 
+  # Image rules
+  - match: {ext: *image_ext}
+    action: *images
+
+  - match: {tag: [img, image], attr: [src, srcset, data-src]}
+    action: *images
+
+  - match: {tag: input, attr: src}
+    action: *images
+
   # Links
   - match: {tag: a, attr: href}
     action: *html_links
@@ -56,16 +66,6 @@ rules:
 
   - match: {ext: js}
     action: *external_js
-
-  # Image rules
-  - match: {ext: *image_ext}
-    action: *images
-
-  - match: {tag: [img, image], attr: [src, srcset, data-src]}
-    action: *images
-
-  - match: {tag: input, attr: src}
-    action: *images
 
    # External js rules (tag="external-js" as a hack)
   - match: {tag: external-js, ext: js}
