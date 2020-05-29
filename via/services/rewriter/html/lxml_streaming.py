@@ -24,7 +24,8 @@ class ParserCallback:
         if tag == "head":
             self.buffer.add(self._inserts.get("head_bottom", ""))
 
-        self.buffer.add(self._tag_factory.end(tag))
+        if not self._tag_factory.is_self_closing(tag):
+            self.buffer.add(self._tag_factory.end(tag))
 
     def data(self, data):
         self.buffer.add(data)

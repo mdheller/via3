@@ -2,10 +2,36 @@ from html import escape
 
 from via.services.rewriter.ruleset import Attribute
 
+# From: http://xahlee.info/js/html5_non-closing_tag.html
+SELF_CLOSING_TAGS = {
+    "area",
+    "base",
+    "br",
+    "col",
+    "embed",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "param",
+    "source",
+    "track",
+    "wbr",
+    # obsolete
+    "command",
+    "keygen",
+    "menuitem",
+}
+
 
 class TagFactory:
     # Should we rewrite or not?
     rewrite = True
+
+    @classmethod
+    def is_self_closing(cls, tag):
+        return tag in SELF_CLOSING_TAGS
 
     def __init__(self, url_rewriter):
         self._url_rewriter = url_rewriter
