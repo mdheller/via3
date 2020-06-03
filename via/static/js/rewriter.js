@@ -89,16 +89,15 @@ function monkeyPatch(urlRewriter) {
     };
 
     const origReplaceState = history.replaceState;
-    history.replaceState = function (state) {
-        console.log("Via: Tried to replace history (ignored)", state);
+    history.replaceState = function (state, title, url) {
+        console.log("Via: Tried to replace history (ignored)", state, title, url);
         //return pushState.apply(history, arguments);
     };
     const origPushState = history.pushState;
-    history.pushState = function (state) {
-        console.log("Via: Tried to change history (ignored)", state);
+    history.pushState = function (state, title, url) {
+        console.log("Via: Tried to change history (ignored)", state, title, url);
         //return pushState.apply(history, arguments);
     };
 }
-
 
 monkeyPatch(new URLRewriter(VIA_REWRITER_SETTINGS));
