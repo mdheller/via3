@@ -34,5 +34,21 @@ class URLFor:
         return url.geturl()
 
     @classmethod
+    def rewriter_with_path(cls, link, rewriter, extras=None):
+        url = urlparse('http://localhost:9083')
+        doc_url = urlparse(link)
+
+        query = {'url': link, 'via.rewriter': rewriter}
+        if extras:
+            query.update(extras)
+
+        url = url._replace(
+            query=urlencode(query),
+            path='/'.join(['html', doc_url.scheme, doc_url.hostname]) + doc_url.path
+        )
+
+        return url.geturl()
+
+    @classmethod
     def legacy_via(cls, link):
         return f'http://localhost:9080/{link}'
