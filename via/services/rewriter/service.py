@@ -7,6 +7,8 @@ from via.services.rewriter.url import URLRewriter
 
 
 class RewriterService:
+    DEFAULT_REWRITER = "htmlparser"
+
     def __init__(self, context, request):
         self._context = context
         self._request = request
@@ -22,9 +24,9 @@ class RewriterService:
 
         url_rewriter = self._get_url_rewriter(document_url, Rules.html())
 
-        rewriter = HTML_REWRITERS.get(via_config.get("rewriter"))(
-            url_rewriter, h_config=h_config, static_url=self._request.static_url
-        )
+        rewriter = HTML_REWRITERS.get(
+            via_config.get("rewriter", self.DEFAULT_REWRITER)
+        )(url_rewriter, h_config=h_config, static_url=self._request.static_url)
 
         chunk_size_in = via_config.get("csi")
         if chunk_size_in:
