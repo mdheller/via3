@@ -42,6 +42,8 @@ class AbstractHTMLRewriter(AbstractRewriter):
         embed = self._get_client_embed()
 
         head_top = f'\n<link rel="canonical" href="{escape(doc_url)}">\n<base href="{escape(doc_url)}">\n'
+        # Disable referer to attempt to fix image blocks
+        head_top += '<meta name="referrer" content="no-referrer" />'
 
         if self.inject_js_rewriter:
             head_top += self._client_side_rewriter_inject(doc_url)
