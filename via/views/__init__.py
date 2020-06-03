@@ -8,6 +8,9 @@ def add_routes(config):
     config.add_route("view_pdf", "/pdf", factory=URLResource)
 
     config.add_route("view_html", "/html", factory=URLResource)
+    config.add_route(
+        "view_html_split", "/html/{scheme}/{domain}/*path", factory=URLResource
+    )
     config.add_route("view_js", "/js", factory=URLResource)
     config.add_route("view_css", "/css", factory=URLResource)
 

@@ -45,6 +45,22 @@ def view_html(context, request):
     )
 
 
+@view.view_config(
+    route_name="view_html_split", http_cache=0,
+)
+def view_html_split(context, request):
+    bits = request.matchdict
+
+    print("DICTTRYR", bits)
+
+    return _rewrite(
+        context,
+        request,
+        expect_type="text/html",
+        rewrite_provider=RewriterService(context, request).get_html_rewriter,
+    )
+
+
 def _rewrite(context, request, expect_type, rewrite_provider, timeout=10):
     print("------------------------------")
     via_config, h_config = Configuration.extract_from_params(request.params)
@@ -55,6 +71,7 @@ def _rewrite(context, request, expect_type, rewrite_provider, timeout=10):
     doc = Document(document_url, not via_config.get("no_ssl"))
     doc.get_original(
         headers=request.headers,
+        cookies=request.cookies,
         expect_type=expect_type,
         timeout=timeout,
         stream=rewriter.streaming,
