@@ -27,7 +27,7 @@ class StreamingParser(HTMLParser):
             self.buffer.add(self.inserts.get("head_top", ""))
 
     def handle_endtag(self, tag):
-        if tag == "body":
+        if tag == "head":
             self.buffer.add(self.inserts.get("head_bottom", ""))
 
         self.buffer.add(self.tag_factory.end(tag))
