@@ -118,12 +118,21 @@ const locationProxy = new Proxy(window.location, {
   }
 });
 
-window.viaWindowProxy = new Proxy(window, {
+// nb. We don't use `window` as the target here because that prevents us
+// us from returning custom values for certain properties (eg. `window.window`)
+// which are non-writable and non-configurable.
+window.viaWindowProxy = new Proxy({}, {
   get(target, prop, receiver) {
-    if (prop === "location") {
-      return locationProxy;
+    switch (prop) {
+      case  "location":
+        return locationProxy;
+      case "window":
+        return window.viaWindowProxy;
+      default:
+        break;
     }
-    const val = Reflect.get(target, prop);
+
+    const val = Reflect.get(window, prop);
 
     // Calls to many `window` methods fail if `this` is a proxy rather than
     // the real window. Therefore we bind the returned function to the real `window`.
@@ -139,6 +148,6 @@ window.viaWindowProxy = new Proxy(window, {
   // Calls `window` property setters fail if `this` is a proxy rather than the
   // real window. Therefore we set the property on the real `window`.
   set(target, prop, value) {
-    return Reflect.set(target, prop, value);
+    return Reflect.set(window, prop, value);
   },
 });
