@@ -57,8 +57,10 @@ def create_app(_=None, **settings):
     print(f"Cache buster salt: {cache_buster.salt}")
 
     config.add_static_view(name="static", path="via:static")
-    if not settings.get("disable_js_cache"):
-        config.add_cache_buster("via:static", cachebust=cache_buster)
+
+    # TESTING
+    # if not settings.get("disable_js_cache"):
+    #     config.add_cache_buster("via:static", cachebust=cache_buster)
 
     app = WhiteNoise(
         config.make_wsgi_app(),
