@@ -61,19 +61,20 @@ class Document:
         cookie_path = "/".join(["/html", url_parts.scheme, url_parts.hostname])
 
         for cookie in self.original.cookies:
-            print(cookie)
-
-            response.set_cookie(
-                name=cookie.name,
-                value=cookie.value,
-                # max_age=cookie.max_age,
-                path=cookie_path,
-                # domain='localhost:9083',
-                secure=cookie.secure,
-                expires=cookie.expires,
-                # httponly=cookie.httponly,
-                comment=cookie.comment,
-                # samesite=cookie.samesite,
-            )
+            try:
+                response.set_cookie(
+                    name=cookie.name,
+                    value=cookie.value,
+                    # max_age=cookie.max_age,
+                    path=cookie_path,
+                    # domain='localhost:9083',
+                    secure=cookie.secure,
+                    expires=cookie.expires,
+                    # httponly=cookie.httponly,
+                    comment=cookie.comment,
+                    # samesite=cookie.samesite,
+                )
+            except Exception as err:
+                print(f"Failed to set cookie \"{cookie.name}\"", err)
 
         return response
