@@ -1,5 +1,6 @@
 lxml
 bs4
+html5lib
 gunicorn
 pyramid
 pyramid-jinja2
