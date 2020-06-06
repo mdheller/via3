@@ -101,3 +101,21 @@ function monkeyPatch(urlRewriter) {
 }
 
 monkeyPatch(new URLRewriter(VIA_REWRITER_SETTINGS));
+
+const locationProxy = new Proxy(window.location, {
+  get(target, prop, receiver) {
+    if (prop === 'href') {
+      return VIA_REWRITER_SETTINGS.baseUrl;
+    }
+    return Reflect.get(target, prop, receiver);
+  }
+});
+
+window.viaWindowProxy = new Proxy(window, {
+  get(target, prop, receiver) {
+    if (prop === 'location') {
+      return locationProxy;
+    }
+    return Reflect.get(target, prop, receiver);
+  }
+});

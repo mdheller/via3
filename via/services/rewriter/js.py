@@ -34,4 +34,10 @@ class JSRewriter(AbstractRewriter):
         for find, replace in replacements:
             content = content.replace(find, replace)
 
+        content = f"""
+(function (window, location) {
+{content}
+})(viaWindowProxy, viaWindowProxy.location)
+"""
+
         return content
