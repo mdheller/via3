@@ -75,6 +75,6 @@ class Document:
                     # samesite=cookie.samesite,
                 )
             except Exception as err:
-                print(f"Failed to set cookie \"{cookie.name}\"", err)
+                print(f'Failed to set cookie "{cookie.name}"', err)
 
         return response
