@@ -1,7 +1,7 @@
 settings:
   # Sadly YAML doesn't let you redeclare an anchor...
   - &html_links REWRITE_HTML
-  - &external_js PROXY_STATIC
+  - &external_js REWRITE_JS
   # For fonts to avoid CORS issues you must proxy them. For that to work we must
   # rewrite them in CSS (internal and external)
   - &fonts PROXY_STATIC
