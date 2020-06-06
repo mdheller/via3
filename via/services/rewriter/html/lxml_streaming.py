@@ -66,5 +66,5 @@ class LXMLStreamingRewriter(AbstractHTMLRewriter):
                 tag_factory=TagFactory(self.url_rewriter),
                 inserts=self.get_page_inserts(doc.url),
                 buffer=buffer,
-            )
+            ),
         )
