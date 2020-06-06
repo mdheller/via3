@@ -39,7 +39,7 @@ def _handle_errors(inner):
 
 
 @_handle_errors
-def get_url_details(url):
+def get_url_details(url, user_agent):
     """Get the content type and status code for a given URL.
 
     :param url: URL to retrieve
@@ -53,5 +53,7 @@ def get_url_details(url):
     if GOOGLE_DRIVE_REGEX.match(url):
         return "application/pdf", 200
 
-    with requests.get(url, stream=True, allow_redirects=True) as rsp:
+    headers = {"User-Agent": user_agent}
+
+    with requests.get(url, headers=headers, stream=True, allow_redirects=True) as rsp:
         return rsp.headers.get("Content-Type"), rsp.status_code
