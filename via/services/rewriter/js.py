@@ -128,6 +128,18 @@ class JSRewriter(AbstractRewriter):
             """
 var exportedVars = {};
 (function (window, location) {
+
+// Ensure that references to methods of `window` as just identifiers (eg. `setTimeout`
+// rather than `window.setTimeout`) get the modified version from the proxy window rather
+// than the real window. This is needed in case these methods are later called
+// in a way that sets `this` to the proxy window (eg. via `call` or `apply`).
+// The native method will throw if this happens as `this` must be the real window.
+//
+// We currently only handle this for `setTimeout` but any of the methods
+// matching the above criteria could be affected as well. Tested in Chrome 85
+// there were 50 such methods. New ones could be added in future, but not that
+// frequently in practice.
+var { setTimeout } = window;
 """
             + content
             + ";"
