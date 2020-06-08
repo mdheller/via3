@@ -1,4 +1,6 @@
 import json
+from collections import defaultdict
+
 from flask import Flask, render_template, request, Response
 
 from html_test_harness.domain import Domain
@@ -34,17 +36,17 @@ def _sort_domains(domains, comments):
         return domains
 
     def _key(domain):
-        if domain.name not in comments:
+        if domain.name not in comments['comment']:
             return 3, None
 
-        comment = comments[domain.name].lower()
+        comment = comments['comment'][domain.name].lower()
         if 'bust' in comment:
-            return 0, comment
+            return 0, -domain.count, comment
 
         if 'usable' in comment:
-            return 1, comment
+            return 1, -domain.count, comment
 
-        return 2, comment
+        return 2, -domain.count, comment
 
     return sorted(domains, key=_key)
 
@@ -88,11 +90,11 @@ def proxy_example():
 
 @app.route('/save_comments', methods=["POST"])
 def save_comments():
-    comments = {}
+    comments = defaultdict(dict)
 
     for name, value in request.form.items():
-        _, domain = name.split('|', 1)
-        comments[domain] = value
+        comment_type, domain = name.split('|', 1)
+        comments[comment_type][domain] = value
 
     with open('comments.json', 'w') as handle:
         json.dump(comments, handle)
