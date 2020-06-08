@@ -1,4 +1,5 @@
 from pyramid import view
+from pyramid.httpexceptions import HTTPFound
 from pyramid.response import Response
 
 from via.configuration import Configuration
@@ -18,7 +19,6 @@ def view_css(context, request):
         rewrite_provider=RewriterService(context, request).get_css_rewriter,
         timeout=3,
     )
-
 
 @view.view_config(
     route_name="view_js", http_cache=0,
@@ -49,16 +49,13 @@ def view_html(context, request):
     route_name="view_html_split", http_cache=0,
 )
 def view_html_split(context, request):
-    bits = request.matchdict
-
-    print("DICTTRYR", bits)
-
     return _rewrite(
         context,
         request,
         expect_type="text/html",
         rewrite_provider=RewriterService(context, request).get_html_rewriter,
     )
+
 
 
 def _rewrite(context, request, expect_type, rewrite_provider, timeout=10):
@@ -69,13 +66,19 @@ def _rewrite(context, request, expect_type, rewrite_provider, timeout=10):
     rewriter = rewrite_provider(document_url)
 
     doc = Document(document_url, not via_config.get("no_ssl"))
-    doc.get_original(
-        headers=request.headers,
-        cookies=request.cookies,
-        expect_type=expect_type,
-        timeout=timeout,
-        stream=rewriter.streaming,
-    )
+    try:
+        doc.get_original(
+            headers=request.headers,
+            cookies=request.cookies,
+            expect_type=expect_type,
+            timeout=timeout,
+            stream=rewriter.streaming,
+        )
+    except HTTPFound as redirect:
+        # TODO! - This should really be CSS or JS or whatever is appropriate
+        # to the caller, not always HTML.
+        redirect.location = rewriter.url_rewriter.rewrite_html(redirect.location)
+        raise
 
     response = Response()
     doc.update_response(response)

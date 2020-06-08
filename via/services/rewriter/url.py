@@ -39,7 +39,7 @@ class URLRewriter:
         return self._rewrite_end_point("view_css", url)
 
     def rewrite_html(self, url):
-        return self._rewrite_end_point("view_html", url)
+        return self._rewrite_end_point("view_html_split", url, split=True)
 
     def rewrite_js(self, url):
         return self._rewrite_end_point("view_js", url)
@@ -69,18 +69,30 @@ class URLRewriter:
             "REWRITE_JS": self._proxy_url("view_js", template_var),
         }
 
-    def _rewrite_end_point(self, endpoint, url):
+    def _rewrite_end_point(self, endpoint, url, split=False):
         # TODO - These names are super vague
         url = self.make_absolute(url)
 
         if self.can_proxy(url):
-            return self._proxy_url(endpoint, url)
+            return self._proxy_url(endpoint, url, split)
 
         return url
 
-    def _proxy_url(self, endpoint, url):
+    def _proxy_url(self, endpoint, url, split=False):
         # TODO - These names are super vague
         params = dict(self._params)
         params["url"] = url
 
-        return self._route_url(endpoint, _query=params)
+        kwargs = {
+            '_query': params
+        }
+
+        if split:
+            parts = urlparse(url)
+            kwargs.update({
+                'scheme': parts.scheme,
+                'domain': parts.hostname,
+                'path': parts.path.lstrip('/').split('/')
+            })
+
+        return self._route_url(endpoint, **kwargs)
