@@ -74,6 +74,12 @@ def _get_exported_vars(js_source):
     # can't create variables with these names.
     var_names = var_names - set(JS_RESERVED_KEYWORDS)
 
+    # Ignore any variables that conflict with DOM objects that we are going to
+    # override.
+    dom_override_vars = ['location', 'window']
+    for name in dom_override_vars:
+        var_names.discard(name)
+
     return var_names
 
 
@@ -136,7 +142,7 @@ var exportedVars = {};
 """
             + "".join(
                 [
-                    f"var {name}; if (exportedVars['{name}']) {{ {name} = exportedVars['{name}'] }}"
+                    f"var {name}; if (typeof exportedVars['{name}'] !== 'undefined') {{ {name} = exportedVars['{name}'] }}"
                     for name in exported_vars
                 ]
             )
