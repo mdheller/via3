@@ -32,7 +32,9 @@ textarea {
                     <th>Count</th>
                     <th>Original link</th>
                     <th>Via link</th>
+                    <th>Via ok?</th>
                     <th>Via 3 link</th>
+
                     <th>Comments</th>
                 </tr>
 
@@ -42,7 +44,11 @@ textarea {
                     <td>{{ domain.name }}</td>
                     <td>{{ domain.count }}</td>
                     <td><a href="{{ domain.url }}" target="_orig">Original</a></td>
-                    <td><a href="{{ url_for.legacy_via(domain.url) }}" target="_via">Via</a></td>
+                    <td>
+                        <a href="{{ url_for.legacy_via(domain.url) }}" target="_via">Via</a>
+                        <a href="{{ url_for.legacy_via_qa(domain.url) }}" target="_via">(QA)</a>
+                    </td>
+                    <td><input type="text" name="legacy_via|{{ domain.name }}" value="{{ comments.get('legacy_via', {}).get(domain.name) }}"></td>
                     <td>
                         <a href={{ url_for.rewriter_with_path(domain.url, "null") }} target="_via3">Null</a>
                         <a href={{ url_for.rewriter_with_path(domain.url, "null_stream") }} target="_via3">(Stream)</a>
@@ -50,8 +56,9 @@ textarea {
                         <a href={{ url_for.rewriter_with_path(domain.url, "lxml") }} target="_via3">LXML</a>
                         <a href={{ url_for.rewriter_with_path(domain.url, "lxml_stream") }} target="_via3">(Stream)</a>
                     </td>
+
                     <td>
-                        <textarea cols="50" rows="2" name="comment|{{ domain.name }}">{{ comments.get(domain.name) }}</textarea>
+                        <textarea cols="50" rows="2" name="comment|{{ domain.name }}">{{ comments.get('comment', {}).get(domain.name) }}</textarea>
                     </td>
                 </tr>
             {% endfor %}

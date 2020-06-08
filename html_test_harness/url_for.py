@@ -52,3 +52,7 @@ class URLFor:
     @classmethod
     def legacy_via(cls, link):
         return f'http://localhost:9080/{link}'
+
+    @classmethod
+    def legacy_via_qa(cls, link):
+        return f'https://qa-via.hypothes.is/{link}'
