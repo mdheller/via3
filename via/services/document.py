@@ -22,6 +22,11 @@ class Document:
         print("Requesting URL:", self.url, headers)
         print("\tCookies:", cookies)
 
+        # TODO - If the upstream URL redirects, that redirect needs to be proxied
+        # to the client so that the proxied page reflects the redirected URL,
+        # _not_ the original URL (eg. the `<base>` tag and other references to
+        # the proxied URL should refer to the final URL rather than the original
+        # one)
         with timeit("retrieve content"):
             try:
                 original = requests.get(
