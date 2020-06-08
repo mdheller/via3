@@ -97,6 +97,9 @@ function monkeyPatch(urlRewriter) {
     origPushState.call(history, state, title, urlRewriter.rewriteHTML(url));
     //return pushState.apply(history, arguments);
   };
+
+  // Pretend to be an old browser that doesn't support ServiceWorker.
+  delete Object.getPrototypeOf(navigator).serviceWorker;
 }
 
 monkeyPatch(new URLRewriter(VIA_REWRITER_SETTINGS));
