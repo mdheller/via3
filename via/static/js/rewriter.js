@@ -102,7 +102,8 @@ function monkeyPatch(urlRewriter) {
   delete Object.getPrototypeOf(navigator).serviceWorker;
 }
 
-monkeyPatch(new URLRewriter(VIA_REWRITER_SETTINGS));
+const urlRewriter = new URLRewriter(VIA_REWRITER_SETTINGS);
+monkeyPatch(urlRewriter);
 
 // Initialize proxy for "unforgeable" window properties (mainly `location`).
 //
@@ -112,45 +113,159 @@ monkeyPatch(new URLRewriter(VIA_REWRITER_SETTINGS));
 // can then intercept reads/writes to the unforgeable properties and modify
 // their behavior.
 const baseURL = new URL(VIA_REWRITER_SETTINGS.baseUrl);
-const locationProxy = new Proxy(window.location, {
-  get(target, prop, receiver) {
-    if (prop in baseURL) {
-      return baseURL[prop];
+
+const assignURL = url => {
+  location.assign(urlRewriter.rewriteHTML(url));
+};
+
+const replaceURL = url => {
+  location.replace(urlRewriter.rewriteHTML(url));
+};
+
+// nb. We don't use `location` as the target here because that prevents us from
+// returning custom values for certain properties (eg. `location.replace`)
+// which are not configurable.
+const locationProxy = new Proxy(
+  {},
+  {
+    get(target, prop, receiver) {
+      if (prop in baseURL) {
+        return baseURL[prop];
+      }
+      switch (prop) {
+        case "assign":
+          return assignURL;
+        case "replace":
+          return replaceURL;
+      }
+
+      const val = Reflect.get(location, prop);
+      if (typeof val === "function") {
+        return val.bind(location);
+      }
+      return val;
+    },
+
+    set(target, prop, value) {
+      if (prop === "href") {
+        value = urlRewriter.rewriteHTML(value);
+      }
+      return Reflect.set(location, prop, value);
+    },
+
+    has(target, prop) {
+      return Reflect.has(location, prop);
+    },
+
+    ownKeys(target) {
+      return Reflect.ownKeys(location);
+    },
+
+    deleteProperty(target, prop) {
+      return Reflect.deleteProperty(location, prop);
+    },
+
+    defineProperty(target, prop, attrs) {
+      return Reflect.defineProperty(location, prop, attrs);
+    },
+
+    getOwnPropertyDescriptor(target, prop) {
+      const descriptor = Reflect.getOwnPropertyDescriptor(location, prop);
+      if (descriptor) {
+        // The proxy is constructed with a dummy target with no properties, but
+        // the engine requires that any properties that don't exist on the target
+        // are marked as configurable. Therefore report that any queried properties
+        // are configurable.
+        descriptor.configurable = true;
+      }
+      return descriptor;
     }
-    return Reflect.get(target, prop);
   }
-});
+);
+
+// Build up a set of "native" properties of `window`, excluding any added by
+// client code.
+const nativeWindowProperties = new Set();
+for (let prop in window) {
+  nativeWindowProperties.add(prop);
+}
 
 // nb. We don't use `window` as the target here because that prevents us
 // us from returning custom values for certain properties (eg. `window.window`)
 // which are non-writable and non-configurable.
-window.viaWindowProxy = new Proxy({}, {
-  get(target, prop, receiver) {
-    switch (prop) {
-      case  "location":
-        return locationProxy;
-      case "window":
-        return window.viaWindowProxy;
-      default:
-        break;
+const windowProxy = new Proxy(
+  {},
+  {
+    get(target, prop, receiver) {
+      switch (prop) {
+        case "location":
+          return locationProxy;
+        case "window":
+          return windowProxy;
+        default:
+          break;
+      }
+
+      const val = Reflect.get(window, prop);
+
+      // Calls to many `window` methods fail if `this` is a proxy rather than
+      // the real window. Therefore we bind the returned function to the real `window`.
+      //
+      // We only apply this to functions which:
+      //
+      //  - Are "native" properties of the window (ie. not a custom added property)
+      //  - Do not look like a constructor (eg. name beginning with capital letter)
+      if (
+        typeof val === "function" &&
+        nativeWindowProperties.has(prop) &&
+        val.name.match(/^[a-z]+/)
+      ) {
+        // A limitation of this is that any properties of `val` are not preserved
+        // on the wrapped function.
+        return val.bind(window);
+      } else {
+        return val;
+      }
+    },
+
+    // Some `window` property setters fail if `this` is a proxy rather than the
+    // real window. Therefore we set the property on the real `window`.
+    set(target, prop, value) {
+      // When using `window.location = <new URL>`, proxy the new URL.
+      if (prop === "location") {
+        value = urlRewriter.rewriteHTML(value);
+      }
+      return Reflect.set(window, prop, value);
+    },
+
+    has(target, prop) {
+      return Reflect.has(window, prop);
+    },
+
+    ownKeys(target) {
+      return Reflect.ownKeys(window);
+    },
+
+    deleteProperty(target, prop) {
+      return Reflect.deleteProperty(window, prop);
+    },
+
+    defineProperty(target, prop, attrs) {
+      return Reflect.defineProperty(window, prop, attrs);
+    },
+
+    getOwnPropertyDescriptor(target, prop) {
+      const descriptor = Reflect.getOwnPropertyDescriptor(window, prop);
+      if (descriptor) {
+        // The proxy is constructed with a dummy target with no properties, but
+        // the engine requires that any properties that don't exist on the target
+        // are marked as configurable. Therefore report that any queried properties
+        // are configurable.
+        descriptor.configurable = true;
+      }
+      return descriptor;
     }
+  }
+);
 
-    const val = Reflect.get(window, prop);
-
-    // Calls to many `window` methods fail if `this` is a proxy rather than
-    // the real window. Therefore we bind the returned function to the real `window`.
-    //
-    // TODO - Explain the regexp test.
-    if (typeof val === 'function' && val.name.match(/^[a-z]+/)) {
-      return val.bind(window);
-    } else {
-      return val;
-    }
-  },
-
-  // Calls `window` property setters fail if `this` is a proxy rather than the
-  // real window. Therefore we set the property on the real `window`.
-  set(target, prop, value) {
-    return Reflect.set(window, prop, value);
-  },
-});
+window.viaWindowProxy = windowProxy;
