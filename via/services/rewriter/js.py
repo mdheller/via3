@@ -1,6 +1,62 @@
+import copy
 import re
 
 from via.services.rewriter.interface import AbstractRewriter
+
+
+# JavaScript keywords that are not allowed to be used as identifier names.
+# See https://mathiasbynens.be/notes/javascript-identifiers.
+#
+# Due to the need to preserve web compatibility with existing code, this list
+# isn't anticipated to expand significantly in future.
+JS_RESERVED_KEYWORDS = [
+    # ES5 reserved keywords.
+    "break",
+    "case",
+    "catch",
+    "continue",
+    "debugger",
+    "default",
+    "delete",
+    "do",
+    "else",
+    "finally",
+    "for",
+    "function",
+    "if",
+    "in",
+    "instanceof",
+    "new",
+    "return",
+    "switch",
+    "this",
+    "throw",
+    "try",
+    "typeof",
+    "var",
+    "void",
+    "while",
+    "and",
+    "with",
+    # ES future reserved keywords (strict and sloppy modes):
+    "class",
+    "const",
+    "enum",
+    "export",
+    "extends",
+    "import",
+    "super",
+    # ES future reserved keywords (strict mode only):
+    "implements",
+    "interface",
+    "let",
+    "package",
+    "private",
+    "protected",
+    "public",
+    "static",
+    "yield",
+]
 
 
 def _get_exported_vars(js_source):
@@ -9,7 +65,16 @@ def _get_exported_vars(js_source):
     # matched, we apply a length restriction. This filters out most inner variables
     # due to their names being shortened after minification.
     JS_VAR_REGEX = re.compile(r"var ([a-zA-Z0-9_$]{3,})")
-    return JS_VAR_REGEX.findall(js_source)
+
+    # This currently scans the complete JS source, but we could reduce false positives
+    # by removing strings and comments first.
+    var_names = set(JS_VAR_REGEX.findall(js_source))
+
+    # Strip any false positives which happen to be reserved JS keywords, as we
+    # can't create variables with these names.
+    var_names = var_names - set(JS_RESERVED_KEYWORDS)
+
+    return var_names
 
 
 class JSRewriter(AbstractRewriter):
