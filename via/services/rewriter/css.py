@@ -7,7 +7,7 @@ class CSSRewriter(AbstractRewriter):
     URL_REGEX = re.compile(r"url\(([^)]+)\)", re.IGNORECASE)
 
     def rewrite(self, doc):
-        content = doc.content.decode("utf-8")
+        content = doc.content.decode("utf-8", errors="replace")
 
         replacements = []
 

@@ -19,7 +19,7 @@ class JSRewriter(AbstractRewriter):
     QUOTED_URL_REGEX = re.compile(r"[\"'](https?://[^\"']+)[\"']", re.IGNORECASE)
 
     def rewrite(self, doc):
-        content = doc.content.decode("utf-8")
+        content = doc.content.decode("utf-8", errors="replace")
 
         replacements = []
 
