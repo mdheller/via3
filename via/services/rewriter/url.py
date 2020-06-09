@@ -83,16 +83,16 @@ class URLRewriter:
         params = dict(self._params)
         params["url"] = url
 
-        kwargs = {
-            '_query': params
-        }
+        kwargs = {"_query": params}
 
         if split:
             parts = urlparse(url)
-            kwargs.update({
-                'scheme': parts.scheme,
-                'domain': parts.hostname,
-                'path': parts.path.lstrip('/').split('/')
-            })
+            kwargs.update(
+                {
+                    "scheme": parts.scheme,
+                    "domain": parts.hostname,
+                    "path": parts.path.lstrip("/").split("/"),
+                }
+            )
 
         return self._route_url(endpoint, **kwargs)

@@ -20,6 +20,7 @@ def view_css(context, request):
         timeout=3,
     )
 
+
 @view.view_config(
     route_name="view_js", http_cache=0,
 )
@@ -55,7 +56,6 @@ def view_html_split(context, request):
         expect_type="text/html",
         rewrite_provider=RewriterService(context, request).get_html_rewriter,
     )
-
 
 
 def _rewrite(context, request, expect_type, rewrite_provider, timeout=10):

@@ -1,7 +1,7 @@
 from urllib.parse import urlparse
 
 import requests
-from pyramid.httpexceptions import HTTPConflict, HTTPNotFound, HTTPFound
+from pyramid.httpexceptions import HTTPConflict, HTTPFound, HTTPNotFound
 from requests.exceptions import RequestException
 
 from via.services.timeit import timeit
@@ -37,13 +37,13 @@ class Document:
                     stream=stream,
                     verify=self.verify_ssl,
                     cookies=cookies,
-                    allow_redirects=False
+                    allow_redirects=False,
                 )
             except RequestException as err:
                 raise HTTPConflict(f"Cannot get '{self.url}' with error: {err}")
 
         if original.is_redirect:
-            raise HTTPFound(location=original.headers['Location'])
+            raise HTTPFound(location=original.headers["Location"])
 
         if expect_type:
             content_type = original.headers["Content-Type"]

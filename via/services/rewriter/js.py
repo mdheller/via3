@@ -4,83 +4,15 @@ import re
 from via.services.rewriter.interface import AbstractRewriter
 
 
-# JavaScript keywords that are not allowed to be used as identifier names.
-# See https://mathiasbynens.be/notes/javascript-identifiers.
-#
-# Due to the need to preserve web compatibility with existing code, this list
-# isn't anticipated to expand significantly in future.
-JS_RESERVED_KEYWORDS = [
-    # ES5 reserved keywords.
-    "break",
-    "case",
-    "catch",
-    "continue",
-    "debugger",
-    "default",
-    "delete",
-    "do",
-    "else",
-    "finally",
-    "for",
-    "function",
-    "if",
-    "in",
-    "instanceof",
-    "new",
-    "return",
-    "switch",
-    "this",
-    "throw",
-    "try",
-    "typeof",
-    "var",
-    "void",
-    "while",
-    "and",
-    "with",
-    # ES future reserved keywords (strict and sloppy modes):
-    "class",
-    "const",
-    "enum",
-    "export",
-    "extends",
-    "import",
-    "super",
-    # ES future reserved keywords (strict mode only):
-    "implements",
-    "interface",
-    "let",
-    "package",
-    "private",
-    "protected",
-    "public",
-    "static",
-    "yield",
-]
-
-
-def _get_exported_vars(js_source):
-    # Perform a crude scan of JS source text to extract potential names of
-    # top-level `var` identifiers. To reduce the number of non-top level variables
-    # matched, we apply a length restriction. This filters out most inner variables
-    # due to their names being shortened after minification.
-    JS_VAR_REGEX = re.compile(r"var ([a-zA-Z0-9_$]{3,})")
-
-    # This currently scans the complete JS source, but we could reduce false positives
-    # by removing strings and comments first.
-    var_names = set(JS_VAR_REGEX.findall(js_source))
-
-    # Strip any false positives which happen to be reserved JS keywords, as we
-    # can't create variables with these names.
-    var_names = var_names - set(JS_RESERVED_KEYWORDS)
-
-    # Ignore any variables that conflict with DOM objects that we are going to
-    # override.
-    dom_override_vars = ['location', 'window']
-    for name in dom_override_vars:
-        var_names.discard(name)
-
-    return var_names
+def _replace_identifier(js_source, identifier, replacement):
+    # Crude regex to find references to the identifier. This will also end
+    # up matching the identifier if it occurs in comments, string or regex
+    # literals.
+    #
+    # A more sophisticated implementation of this function might use an
+    # ECMAScript lexer to tokenize the source and only check identifiers for
+    # matches.
+    return re.sub(r"\b" + identifier + r"\b", replacement, js_source)
 
 
 class JSRewriter(AbstractRewriter):
@@ -114,50 +46,18 @@ class JSRewriter(AbstractRewriter):
         for find, replace in replacements:
             content = content.replace(find, replace)
 
-        # Wrap script content in an IIFE so we can intercept accesses to `location`
-        # and other _unforgeable_ properties which can't be monkey-patched directly by
-        # client-side JS. See https://html.spec.whatwg.org/ for a complete
-        # list of "LegacyUnforgeable" properties.
+        # Replace references to `location` (the global variable), `document.location` or
+        # `window.location` with a custom property which refers to the proxied URL
+        # rather than the real URL. We can't do this with monkey-patching on
+        # the client alone because `location` is an "unforgeable" property.
         #
-        # An issue with this is that any variables declared at the top level are no longer
-        # visible to other scripts but instead become scoped to the IIFE function.
-        # To work around that, we perform a crude scan of the source text to find
-        # possible exported variable names and then re-export them.
-        exported_vars = _get_exported_vars(content)
-        content = (
-            """
-var exportedVars = {};
-(function (window, location) {
+        # This will replace references to other identifiers that happen to be called
+        # `location` as well, but in most cases that won't break anything as long
+        # as all references are treated the same way.
+        content = _replace_identifier(content, "location", "viaLocation")
 
-// Ensure that references to methods of `window` as just identifiers (eg. `setTimeout`
-// rather than `window.setTimeout`) get the modified version from the proxy window rather
-// than the real window. This is needed in case these methods are later called
-// in a way that sets `this` to the proxy window (eg. via `call` or `apply`).
-// The native method will throw if this happens as `this` must be the real window.
-//
-// We currently only handle this for `setTimeout` but any of the methods
-// matching the above criteria could be affected as well. Tested in Chrome 85
-// there were 50 such methods. New ones could be added in future, but not that
-// frequently in practice.
-var { setTimeout } = window;
-"""
-            + content
-            + ";"
-            + ";".join(
-                [
-                    f"exportedVars['{name}']=typeof {name} !== 'undefined' ? {name} : undefined"
-                    for name in exported_vars
-                ]
-            )
-            + """
-}).call(viaWindowProxy, viaWindowProxy, viaWindowProxy.location);
-"""
-            + "".join(
-                [
-                    f"var {name}; if (typeof exportedVars['{name}'] !== 'undefined') {{ {name} = exportedVars['{name}'] }}"
-                    for name in exported_vars
-                ]
-            )
-        )
+        # Strip sourcemap URLs. The original source maps will no longer be
+        # applicable following changes to the content.
+        content = re.sub(r"//# sourceMappingURL=.*$", "//", content)
 
         return content

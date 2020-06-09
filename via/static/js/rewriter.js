@@ -105,13 +105,12 @@ function monkeyPatch(urlRewriter) {
 const urlRewriter = new URLRewriter(VIA_REWRITER_SETTINGS);
 monkeyPatch(urlRewriter);
 
-// Initialize proxy for "unforgeable" window properties (mainly `location`).
+// Initialize proxy for "unforgeable" DOM properties (`window.location`,
+// `document.location` and various properties on `location`).
 //
 // Since these properties cannot be monkey-patched, we instead use server-side
-// rewriting to wrap the page's JS in an IIFE which defines alternative `window`
-// and `location` globals that refer to proxies set up here. These proxies
-// can then intercept reads/writes to the unforgeable properties and modify
-// their behavior.
+// rewriting to replace references to this property with a different property
+// which we can set.
 const baseURL = new URL(VIA_REWRITER_SETTINGS.baseUrl);
 
 const assignURL = url => {
@@ -183,89 +182,18 @@ const locationProxy = new Proxy(
   }
 );
 
-// Build up a set of "native" properties of `window`, excluding any added by
-// client code.
-const nativeWindowProperties = new Set();
-for (let prop in window) {
-  nativeWindowProperties.add(prop);
-}
+const viaLocationDescriptor = {
+  enumerable: true,
+  configurable: true,
 
-// nb. We don't use `window` as the target here because that prevents us
-// us from returning custom values for certain properties (eg. `window.window`)
-// which are non-writable and non-configurable.
-const windowProxy = new Proxy(
-  {},
-  {
-    get(target, prop, receiver) {
-      switch (prop) {
-        case "location":
-          return locationProxy;
-        case "window":
-          return windowProxy;
-        default:
-          break;
-      }
+  get(value) {
+    return locationProxy;
+  },
 
-      const val = Reflect.get(window, prop);
-
-      // Calls to many `window` methods fail if `this` is a proxy rather than
-      // the real window. Therefore we bind the returned function to the real `window`.
-      //
-      // We only apply this to functions which:
-      //
-      //  - Are "native" properties of the window (ie. not a custom added property)
-      //  - Do not look like a constructor (eg. name beginning with capital letter)
-      if (
-        typeof val === "function" &&
-        nativeWindowProperties.has(prop) &&
-        val.name.match(/^[a-z]+/)
-      ) {
-        // A limitation of this is that any properties of `val` are not preserved
-        // on the wrapped function.
-        return val.bind(window);
-      } else {
-        return val;
-      }
-    },
-
-    // Some `window` property setters fail if `this` is a proxy rather than the
-    // real window. Therefore we set the property on the real `window`.
-    set(target, prop, value) {
-      // When using `window.location = <new URL>`, proxy the new URL.
-      if (prop === "location") {
-        value = urlRewriter.rewriteHTML(value);
-      }
-      return Reflect.set(window, prop, value);
-    },
-
-    has(target, prop) {
-      return Reflect.has(window, prop);
-    },
-
-    ownKeys(target) {
-      return Reflect.ownKeys(window);
-    },
-
-    deleteProperty(target, prop) {
-      return Reflect.deleteProperty(window, prop);
-    },
-
-    defineProperty(target, prop, attrs) {
-      return Reflect.defineProperty(window, prop, attrs);
-    },
-
-    getOwnPropertyDescriptor(target, prop) {
-      const descriptor = Reflect.getOwnPropertyDescriptor(window, prop);
-      if (descriptor) {
-        // The proxy is constructed with a dummy target with no properties, but
-        // the engine requires that any properties that don't exist on the target
-        // are marked as configurable. Therefore report that any queried properties
-        // are configurable.
-        descriptor.configurable = true;
-      }
-      return descriptor;
-    }
+  set(value) {
+    locationProxy.href = value;
   }
-);
+};
 
-window.viaWindowProxy = windowProxy;
+Object.defineProperty(document, 'viaLocation', viaLocationDescriptor);
+Object.defineProperty(window, 'viaLocation', viaLocationDescriptor);
