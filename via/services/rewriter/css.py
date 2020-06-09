@@ -32,4 +32,8 @@ class CSSRewriter(AbstractRewriter):
         for find, replace in replacements:
             content = content.replace(find, replace)
 
+        # Strip sourcemap URLs. The original source maps will no longer be
+        # applicable following changes to the content.
+        content = re.sub(r"/\*# sourceMappingURL=.*\*/", "", content, flags=re.MULTILINE)
+
         return content
