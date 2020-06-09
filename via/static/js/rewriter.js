@@ -115,81 +115,126 @@
   const urlRewriter = new URLRewriter(VIA_REWRITER_SETTINGS);
   monkeyPatch(urlRewriter);
 
-  // Initialize proxy for "unforgeable" DOM properties (`window.location`,
-  // `document.location` and various properties on `location`).
-  //
-  // Since these properties cannot be monkey-patched, we instead use server-side
-  // rewriting to replace references to this property with a different property
-  // which we can set.
-  const baseURL = new URL(VIA_REWRITER_SETTINGS.baseUrl);
-
-  const assignURL = url => {
-    location.assign(urlRewriter.rewriteHTML(url));
-  };
-
-  const replaceURL = url => {
-    location.replace(urlRewriter.rewriteHTML(url));
-  };
-
-  // nb. We don't use `location` as the target here because that prevents us from
-  // returning custom values for certain properties (eg. `location.replace`)
-  // which are not configurable.
-  const locationProxy = new Proxy(
-    {},
-    {
-      get(target, prop, receiver) {
-        if (prop in baseURL) {
-          return baseURL[prop];
-        }
-        switch (prop) {
-          case "assign":
-            return assignURL;
-          case "replace":
-            return replaceURL;
-        }
-
-        const val = Reflect.get(location, prop);
-        if (typeof val === "function") {
-          return val.bind(location);
-        }
-        return val;
-      },
-
-      set(target, prop, value) {
-        if (prop === "href") {
-          value = urlRewriter.rewriteHTML(value);
-        }
-        return Reflect.set(location, prop, value);
-      },
-
-      has(target, prop) {
-        return Reflect.has(location, prop);
-      },
-
-      ownKeys(target) {
-        return Reflect.ownKeys(location);
-      },
-
-      deleteProperty(target, prop) {
-        return Reflect.deleteProperty(location, prop);
-      },
-
-      defineProperty(target, prop, attrs) {
-        return Reflect.defineProperty(location, prop, attrs);
-      },
-
-      getOwnPropertyDescriptor(target, prop) {
-        const descriptor = Reflect.getOwnPropertyDescriptor(location, prop);
-        if (descriptor) {
-          // The proxy is constructed with a dummy target with no properties, but
-          // the engine requires that any properties that don't exist on the target
-          // are marked as configurable. Therefore report that any queried properties
-          // are configurable.
-          descriptor.configurable = true;
-        }
-        return descriptor;
-      }
+  /**
+   * A replacement for the `Location` object returned by `window.location`
+   * which behaves as if the location is the proxied URL rather than the
+   * actual URL (which includes Via).
+   *
+   * This implements the `Location` API described at
+   * https://developer.mozilla.org/en-US/docs/Web/API/Location
+   */
+  class ViaLocation {
+    /**
+     * @param {Location} location - The real `location` object
+     * @param {string} proxiedURL - The URL being viewed through the proxy
+     * @param {(url: string) => string} rewriteURL -
+     *    Function that rewrites a URL so that it is delivered through the
+     *    proxy.
+     */
+    constructor(location, proxiedURL, rewriteURL) {
+      this._location = location;
+      this._proxiedURL = new URL(proxiedURL);
+      this._rewriteURL = rewriteURL;
     }
+
+    get ancestorOrigins() {
+      return [this._proxiedURL.origin];
+    }
+
+    get href() {
+      return this._proxiedURL.href;
+    }
+
+    set href(value) {
+      this._location.href = this._rewriteURL(value);
+    }
+
+    get protocol() {
+      return this._proxiedURL.protocol;
+    }
+
+    set protocol(value) {
+      this._setPart("protocol", value);
+    }
+
+    get host() {
+      return this._proxiedURL.host;
+    }
+
+    set host(value) {
+      this._setPart("host", value);
+    }
+
+    get hostname() {
+      return this._proxiedURL.hostname;
+    }
+
+    set hostname(value) {
+      this._setPart("hostname", value);
+    }
+
+    get port() {
+      return this._proxiedURL.port;
+    }
+
+    set port(value) {
+      this._setPart("port", value);
+    }
+
+    get pathname() {
+      return this._proxiedURL.pathname;
+    }
+
+    set pathname(value) {
+      this._setPart("pathname", value);
+    }
+
+    get search() {
+      return this._proxiedURL.search;
+    }
+
+    set search(value) {
+      this._setPart("search", value);
+    }
+
+    get hash() {
+      return this._proxiedURL.hash;
+    }
+
+    set hash(value) {
+      this._setPart("hash", value);
+    }
+
+    get origin() {
+      return this._proxiedURL.origin;
+    }
+
+    assign(url) {
+      this._location.assign(this._rewriteURL(url));
+    }
+
+    reload() {
+      this._location.reload();
+    }
+
+    replace(url) {
+      this._location.replace(this._rewriteURL(url));
+    }
+
+    toString() {
+      return this._proxiedURL.href;
+    }
+
+    _setPart(part, value) {
+      this._proxiedURL[part] = value;
+      this._location.href = this._rewriteURL(this._proxiedURL.href);
+    }
+  }
+
+  const viaLocation = new ViaLocation(
+    location,
+    VIA_REWRITER_SETTINGS.baseUrl,
+    url => urlRewriter.rewriteHTML(url)
   );
 
   const viaLocationDescriptor = {
@@ -197,14 +242,19 @@
     configurable: true,
 
     get(value) {
-      return locationProxy;
+      return viaLocation;
     },
 
     set(value) {
-      locationProxy.href = value;
+      viaLocation.href = value;
     }
   };
 
+  // Create a location property that refers to the proxied URL.
+  // `document.location` and `window.location` are "unforgeable" so instead of
+  // monkey-patching the original property we instead use server-side rewriting
+  // to replace references to `location` with `viaLocation` and then install the
+  // `viaLocation` property here.
   Object.defineProperty(document, "viaLocation", viaLocationDescriptor);
   Object.defineProperty(window, "viaLocation", viaLocationDescriptor);
 })();
