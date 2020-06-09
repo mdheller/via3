@@ -58,6 +58,6 @@ class JSRewriter(AbstractRewriter):
 
         # Strip sourcemap URLs. The original source maps will no longer be
         # applicable following changes to the content.
-        content = re.sub(r"//# sourceMappingURL=.*$", "//", content)
+        content = re.sub(r"//# sourceMappingURL=.*$", "//", content, flags=re.MULTILINE)
 
         return content
