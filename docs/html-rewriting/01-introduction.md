@@ -233,32 +233,32 @@ to solve these problems.
 Backend rewriters
 
 * A "null" streaming and non-streaming solution - For speed comparison only
-* [LXML based non-streaming rewriter](focus/lxml-rewriter.md) - Dismissed for 
+* [LXML based non-streaming rewriter](implementation-report/lxml-rewriter.md) - Dismissed for 
   inserting tags into pages
-* [LXML streaming rewriter](focus/lxml-rewriter.md) - Dismissed for inserting 
+* [LXML streaming rewriter](implementation-report/lxml-rewriter-streaming.md) - Dismissed for inserting 
   tags into pages
-* [HTMLParser streaming rewriter](focus/htmlparser-rewriter.md)
+* [HTMLParser streaming rewriter](implementation-report/htmlparser-rewriter.md)
 
 As addons to a back-end rewriter
 
-* NGINX  - A required component regardless
-* Javascript client side interceptions - A required component regardless
+* NGINX - A required component regardless
+* [Javascript client side interceptions](implementation-report/client-side-intercepts.md) - A required component regardless
 
 ## Techniques that were not tried
 
 * Pure NGINX rewriting - Dismissed as impossible based on complexity of LXML 
   solution
 * Pure Javascript rewriting - Not attempted in the time
-* [Beautiful Soup](https://pypi.org/project/beautifulsoup4/) - More for 
+* [Beautiful Soup⬈](https://pypi.org/project/beautifulsoup4/) - More for 
   extraction, unlikely to be able to cleanly proxy the page
-* [html5lib](https://pypi.org/project/html5lib/) - Non streaming, HTML5 
+* [html5lib⬈](https://pypi.org/project/html5lib/) - Non streaming, HTML5 
   compliant parser. Very slow. Non streaming
-* [gumbo](https://pypi.org/project/gumbo/) / 
-  [html5-parser](https://html5-parser.readthedocs.io/en/latest/) - Non 
+* [gumbo⬈](https://pypi.org/project/gumbo/) / 
+  [html5-parser⬈](https://html5-parser.readthedocs.io/en/latest/) - Non 
   streaming, HTML5 compliant parser. Faster, but unmaintained and requires 
   C compilation
 
-## Streaming parsing is much better for user experience
+### Streaming parsing is much better for user experience
 
 With Javascript interception and NGINX as required components, the major choice
 for HTML parsing comes down to speed and user experience.
@@ -276,8 +276,31 @@ It was generally observed that:
  * A streaming parser _can_ rewrite broken pages more faithfully (by being 
    dumb)
  * The difference is mostly observable on large pages
+ * Streaming should have much better memory characteristics
  
-For more details see [Streaming comparisons](focus/streaming-comparisons.md).
+For more details see [Speed comparisons](comparisons/speed.md).
+
+### Streaming comes with significant downsides too
+
+Many parsers are not available to us as they have no streaming support (e.g.
+`html5lib`).
+
+Generally the complexity of our coding is higher to retrieve, process and 
+respond with data in a streaming way. The real downsides come with types of
+coding and behavior which become impossible, rather than more difficult.
+
+For example, in a traditional in-memory setting, if the connection failed half
+way through, it's possible to restart the connection and get the content again.
+This isn't possible in streaming context, as part of the original content will
+already have been sent to the client.
+
+In general it's not clear how errors would be handled, as we mostly have to
+return a status code _before_ we start sending content.
+
+### Streaming is probably worth it
+
+The upsides probably outweigh the down, and if we find they don't it's easy to
+switch from one mode of working to the other. 
 
 ### The result was HTMLParser streaming with NGINX and Javascript intercepts
 
@@ -373,7 +396,7 @@ I would suggest:
 We would of course have to back-fill any testing before redirecting any real 
 user traffic to the solution.
 
-## Investigate an up to date Via
+## Investigate a solution based on up to date `pywb`
 
 Some of our bug bears with `pywb` and hence Via are due to the fact it is badly
 out of date. We should investigate how many could be solved by a solution based

@@ -85,7 +85,7 @@ to make it hard to trust our judgements:
  
 Engineers tend to be, and are often required to be, over confident when 
 approaching issues. A strong (if inaccurate) feeling that a solution can be 
-found is a useful foundation to provide the necessary will power to find it.
+found is a useful foundation to provide the necessary willpower to find it.
 
 After the fact if no solution is found it is forgotten, but if one is found
 the original assessment is judged as accurate. In fact we may have had no idea
