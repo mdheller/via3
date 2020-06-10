@@ -3,8 +3,8 @@
 ## Time
 
 The time spent on this is definitely more than half a day, but that's a bit 
-unfair, as that's on me for taking this further than it needed. It also s
-uffers from being the first and incurred some first movers disadvantage:
+unfair, as that's on me for taking this further than it needed. It also suffers
+from being the first and incurred some first movers disadvantage:
 
  * I was using this to learn what did or didn't need to be rewritten
  * I had to work out how to inject the client (not in LXML, just what code 

@@ -95,7 +95,7 @@ at all, and sheer dogged determination might have served just as well.
 
 Junior developers, or experienced developers moving into a new domain are often
 unaware of how little they know about it. This [robs them of the required tools
-to assess their own skill](https://en.wikipedia.org/wiki/Dunning%E2%80%93Kruger_effect).
+to assess their own skill⬈](https://en.wikipedia.org/wiki/Dunning%E2%80%93Kruger_effect).
 
 ### This problem has nasty features that combine with the above
 
