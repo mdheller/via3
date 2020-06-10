@@ -257,11 +257,58 @@
     // `viaLocation` property here.
     Object.defineProperty(document, "viaLocation", viaLocationDescriptor);
     Object.defineProperty(window, "viaLocation", viaLocationDescriptor);
+
+    return viaLocation;
+  }
+
+  function patchDocumentDomain(location) {
+    Object.defineProperty(document, "domain", {
+      get() {
+        // Return the proxied location.
+        return location.hostname;
+      },
+
+      set(value) {
+        // Modifications to `document.domain` are ignored. Attempting to set
+        // the native property would fail on the proxy.
+        // See security notes at https://developer.mozilla.org/en-US/docs/Web/API/Document/domain.
+      }
+    });
+  }
+
+  function patchDocumentCookie(location) {
+    // Walk up the prototype chain from the document to find the native
+    // "cookie" getter/setter.
+    let origCookieDescriptor;
+    let protoObject = document;
+    while (!origCookieDescriptor && protoObject) {
+      origCookieDescriptor = Object.getOwnPropertyDescriptor(
+        protoObject,
+        "cookie"
+      );
+      protoObject = Object.getPrototypeOf(protoObject);
+    }
+
+    Object.defineProperty(document, "cookie", {
+      get() {
+        return origCookieDescriptor.get.call(document);
+      },
+
+      set(value) {
+        // Restrict the cookie to other proxied URLs on the same origin.
+        // The backend applies the same transformation to server-set cookies.
+        const scheme = location.protocol.slice(0, -1); // Strip trailing ":"
+        value = value + `;path=/html/${scheme}/${location.hostname}`;
+        origCookieDescriptor.set.call(document, value);
+      }
+    });
   }
 
   const urlRewriter = new URLRewriter(VIA_REWRITER_SETTINGS);
   patchXHRAndFetch(urlRewriter);
   patchHistory(urlRewriter);
   patchServiceWorker(urlRewriter);
-  patchLocation(urlRewriter, VIA_REWRITER_SETTINGS.baseUrl);
+  const viaLocation = patchLocation(urlRewriter, VIA_REWRITER_SETTINGS.baseUrl);
+  patchDocumentDomain(viaLocation);
+  patchDocumentCookie(viaLocation);
 })();
