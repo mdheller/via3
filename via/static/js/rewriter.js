@@ -75,7 +75,7 @@
     }
   }
 
-  function monkeyPatch(urlRewriter) {
+  function patchXHRAndFetch(urlRewriter) {
     console.log("Initializing Via DOM API monkey-patching");
 
     const origFetch = window.fetch;
@@ -89,7 +89,9 @@
       console.log("Via: Triggered XMLHttpRequest patch", method, url, args);
       return origOpen.call(this, method, urlRewriter.proxyStatic(url), ...args);
     };
+  }
 
+  function patchHistory(urlRewriter) {
     const origReplaceState = history.replaceState;
     history.replaceState = function(state, title, url) {
       console.log("Via: Tried to replace history", state, title, url);
@@ -107,13 +109,12 @@
       origPushState.call(history, state, title, urlRewriter.rewriteHTML(url));
       //return pushState.apply(history, arguments);
     };
+  }
 
+  function patchServiceWorker(urlRewriter) {
     // Pretend to be an old browser that doesn't support ServiceWorker.
     delete Object.getPrototypeOf(navigator).serviceWorker;
   }
-
-  const urlRewriter = new URLRewriter(VIA_REWRITER_SETTINGS);
-  monkeyPatch(urlRewriter);
 
   /**
    * A replacement for the `Location` object returned by `window.location`
@@ -231,30 +232,36 @@
     }
   }
 
-  const viaLocation = new ViaLocation(
-    location,
-    VIA_REWRITER_SETTINGS.baseUrl,
-    url => urlRewriter.rewriteHTML(url)
-  );
+  function patchLocation(urlRewriter, baseUrl) {
+    const viaLocation = new ViaLocation(location, baseUrl, url =>
+      urlRewriter.rewriteHTML(url)
+    );
 
-  const viaLocationDescriptor = {
-    enumerable: true,
-    configurable: true,
+    const viaLocationDescriptor = {
+      enumerable: true,
+      configurable: true,
 
-    get(value) {
-      return viaLocation;
-    },
+      get(value) {
+        return viaLocation;
+      },
 
-    set(value) {
-      viaLocation.href = value;
-    }
-  };
+      set(value) {
+        viaLocation.href = value;
+      }
+    };
 
-  // Create a location property that refers to the proxied URL.
-  // `document.location` and `window.location` are "unforgeable" so instead of
-  // monkey-patching the original property we instead use server-side rewriting
-  // to replace references to `location` with `viaLocation` and then install the
-  // `viaLocation` property here.
-  Object.defineProperty(document, "viaLocation", viaLocationDescriptor);
-  Object.defineProperty(window, "viaLocation", viaLocationDescriptor);
+    // Create a location property that refers to the proxied URL.
+    // `document.location` and `window.location` are "unforgeable" so instead of
+    // monkey-patching the original property we instead use server-side rewriting
+    // to replace references to `location` with `viaLocation` and then install the
+    // `viaLocation` property here.
+    Object.defineProperty(document, "viaLocation", viaLocationDescriptor);
+    Object.defineProperty(window, "viaLocation", viaLocationDescriptor);
+  }
+
+  const urlRewriter = new URLRewriter(VIA_REWRITER_SETTINGS);
+  patchXHRAndFetch(urlRewriter);
+  patchHistory(urlRewriter);
+  patchServiceWorker(urlRewriter);
+  patchLocation(urlRewriter, VIA_REWRITER_SETTINGS.baseUrl);
 })();
