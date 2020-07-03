@@ -71,3 +71,29 @@ def clean_headers(headers, pass_cookies=False):
         clean[header_name] = value
 
     return clean
+
+
+def reorder_headers(target, exemplar):
+    """Re-order the headers in the target to match an exemplar.
+
+    All fields in the exemplar will come first, other fields will appear in the
+    same order they were found at the end of the set of headers.
+
+    :return: An OrderedDict of headers
+    """
+
+    target_keys = list(target.keys())
+    exemplar_keys = list(exemplar.keys())
+    in_exemplar = set(target_keys) & set(exemplar_keys)
+
+    def sort_value(key):
+        if key in in_exemplar:
+            return 0, exemplar_keys.index(key)
+
+        return 1, target_keys.index(key)
+
+    sorted_headers = OrderedDict()
+    for key in sorted(target_keys, key=sort_value):
+        sorted_headers[key] = target[key]
+
+    return sorted_headers
