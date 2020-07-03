@@ -9,8 +9,7 @@ from edit_distance import SequenceMatcher
 from Levenshtein import distance
 from pkg_resources import resource_filename
 
-from via.get_url import clean_headers
-from via.get_url.headers import reorder_headers
+from via.get_url.headers import clean_headers, reorder_headers
 
 
 class BrowserMimic:
@@ -44,15 +43,14 @@ class BrowserMimic:
         if "Referer" not in headers:
             headers["Referer"] = "http://www.google.com"
 
-        possible_browsers, _, _ = cls.identify_browser(headers)
-        if possible_browsers:
-            browser_guess = possible_browsers[0]
+        browser_guess = cls.identify_browser(headers, best_guess=True)
+        if browser_guess:
             headers = reorder_headers(headers, cls.header_sets[browser_guess])
 
         return headers
 
     @classmethod
-    def identify_browser(cls, headers):
+    def identify_browser(cls, headers, best_guess=False):
         browsers, score, match_method = [], 0.0, None
 
         user_agent = headers.get("User-Agent")
@@ -69,6 +67,9 @@ class BrowserMimic:
                 cls.header_fingerprints,
                 comparison_fn=cls._collection_match,
             )
+
+        if best_guess:
+            return browsers[0] if browsers else None
 
         return browsers, score, match_method
 
